@@ -1,0 +1,9 @@
+# Deny web access to everything cached here. The learning
+# record, the price history, the price caches and every other
+# file in this directory must never be readable over the web.
+# Only the placeholder page stays public.
+Require all denied
+<Files "index.html">
+    Require all granted
+</Files>
+Options -Indexes
