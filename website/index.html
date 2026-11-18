@@ -1,0 +1,2284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="Prognosis is a prediction market. Follow live questions about what happens next, watch the price move as traders take a view, and see how each market settles on the real outcome." />
+    <link rel="icon" type="image/png" href="logo-light.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>Prognosis: Prediction Markets</title>
+    <style>
+      :root{
+        --black:#111111;
+        --lime:#C8F542;
+        --white:#FFFFFF;
+        --ivory:#F5F2EB;
+        --card:#FFFFFF;
+        --card-2:#F4F4F2;
+        --grey:#5B5B55;
+        --grey-2:#9A968C;
+        --hair:rgba(17,17,17,.14);
+        --hair-strong:rgba(17,17,17,.35);
+        --bid:#1E7D32;
+        --ask:#C62828;
+        --sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+        --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      }
+      *{box-sizing:border-box}
+      html,body{touch-action:pan-y}
+      body{margin:0;background:var(--white);color:var(--black);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+      button{font-family:inherit;cursor:pointer;min-height:44px}
+      a{color:inherit}
+      ::selection{background:var(--lime);color:var(--black)}
+      .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+      .mono{font-family:var(--mono)}
+
+      /* nav */
+      .nav{position:sticky;top:0;z-index:100;background:var(--white);border-bottom:1px solid var(--hair)}
+      .nav-in{display:flex;align-items:center;gap:26px;height:64px;max-width:1180px;margin:0 auto;padding:0 24px}
+      .brand{display:flex;align-items:center;gap:11px;text-decoration:none;flex:none}
+      .brand img{display:block;flex:none;width:34px;height:34px;border-radius:4px}
+      .brand-name{font-family:var(--sans);font-size:21px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+      .nav-links{display:flex;gap:4px;margin:0 auto}
+      .nav-links button{background:none;border:0;font-size:14px;font-weight:700;padding:8px 14px;color:var(--black);border-radius:6px;min-height:44px}
+      .nav-links button:hover{background:var(--card-2)}
+      .nav-links button.on{box-shadow:inset 0 -3px 0 var(--lime)}
+      .nav-right{display:flex;align-items:center;gap:10px;flex:none;margin-left:auto}
+      .nav-bell{width:40px;height:40px}
+      .nav-auth{border-radius:99px;padding:0 16px;min-height:40px;font-size:13.5px}
+      .nav-right .nav-menu{display:none}
+      .mobile-menu{display:none;position:fixed;top:60px;right:12px;z-index:200;background:var(--white);border:1.5px solid var(--black);border-radius:12px;padding:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);min-width:210px}
+      .mobile-menu.open{display:block}
+      .mobile-menu button{display:block;width:100%;text-align:left;background:none;border:0;font-size:14px;font-weight:700;padding:11px 10px;border-radius:8px;min-height:44px;color:var(--black)}
+      .mobile-menu button:hover{background:var(--card-2)}
+      .mobile-menu .btn{margin-top:6px;text-align:center;justify-content:center}
+      .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--black);border-radius:8px;font-weight:700;font-size:14px;padding:0 18px;text-decoration:none;background:transparent;color:var(--black);min-height:44px}
+      .btn-black{background:var(--black);color:var(--white)}
+      .btn-black:hover{background:#000}
+      .btn-lime{background:var(--lime);color:var(--black);border-color:var(--black)}
+      .btn-lime:hover{filter:brightness(.97)}
+      .btn[disabled]{opacity:.45;cursor:not-allowed}
+
+      /* ticker tape: black strip */
+      .ticker{background:var(--black);color:var(--white)}
+      .ticker-in{display:flex;gap:16px;overflow:hidden;padding:9px 24px;max-width:1180px;margin:0 auto;font-family:var(--mono);font-size:12px;white-space:nowrap;-webkit-overflow-scrolling:touch}
+      .ticker-track{display:inline-flex;gap:16px;flex:none;white-space:nowrap;will-change:transform}
+      @keyframes tickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+      .ticker.anim .ticker-track{animation:tickerMove 90s linear infinite}
+      .ticker:hover .ticker-track{animation-play-state:paused}
+      .ticker-item{display:inline-flex;gap:7px;align-items:center;flex:none}
+      .ticker-item .sym{font-weight:700;color:var(--white)}
+      .ticker-item .pr{color:rgba(255,255,255,.85)}
+      .ticker-item .chg-up{color:#7ED07A}
+      .ticker-item .chg-down{color:#F28B82}
+
+      /* layout */
+      .view{display:none}
+      .view.on{display:block}
+      .page-head{padding:40px 0 8px}
+      .page-head--row{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+      .page-title{font-family:var(--sans);font-size:clamp(28px,4.5vw,48px);font-weight:900;letter-spacing:-.03em;line-height:1.02;margin:12px 0 8px}
+      .page-sub{color:var(--grey);font-size:15.5px;max-width:58ch;margin:0}
+      .sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin:34px 0 16px;flex-wrap:wrap}
+      .sec-title{font-family:var(--sans);font-size:clamp(22px,5vw,28px);font-weight:800;letter-spacing:-.02em;margin:0}
+      .sec-note{font-family:var(--mono);font-size:11.5px;color:var(--grey);letter-spacing:.05em}
+      .back-btn{background:none;border:0;font-weight:700;font-size:14px;padding:8px 0;min-height:44px}
+      .back-btn:hover{text-decoration:underline}
+      .icon-btn{width:44px;height:44px;border:1.5px solid var(--hair-strong);background:transparent;border-radius:8px;display:inline-grid;place-items:center;padding:0;font-size:16px}
+      .icon-btn:hover{border-color:var(--black)}
+
+      /* featured market: black hero with lime glow, cropped ribbon */
+      .feat{border:1.5px solid var(--black);border-radius:14px;background:var(--black);color:var(--white);overflow:hidden;margin-top:22px;position:relative}
+      .feat::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+        radial-gradient(420px 220px at 88% -10%, rgba(200,245,66,.55), rgba(200,245,66,0) 70%)}
+      .feat-ribbon{position:absolute;top:-70px;right:-60px;width:340px;height:340px;pointer-events:none;opacity:.16;transform:rotate(8deg)}
+      .feat-ribbon img{width:100%;height:100%;object-fit:cover;border-radius:0}
+      .feat-top{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:16px 22px;flex-wrap:wrap;position:relative}
+      .feat-top .sec-note{color:rgba(255,255,255,.65)}
+      .feat-body{padding:8px 22px 22px;position:relative}
+      .feat-q{font-family:var(--sans);font-size:clamp(26px,3.8vw,44px);line-height:1.06;font-weight:900;letter-spacing:-.025em;margin:0 0 20px;max-width:24ch;color:var(--white)}
+      .pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--white);border-radius:99px;padding:5px 12px;background:var(--lime);color:var(--black)}
+      .pill.closed{background:rgba(255,255,255,.14);color:var(--white)}
+      .pill.resolved{background:var(--white);color:var(--black)}
+      .split-nums{display:flex;gap:44px;flex-wrap:wrap}
+      .split-num .n{font-family:var(--sans);font-size:clamp(38px,6vw,72px);line-height:1;font-weight:900;color:var(--white)}
+      .split-num.first .n{box-shadow:inset 0 -12px 0 var(--lime);color:var(--white)}
+      .split-num .l{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.6);margin-top:7px}
+      .split-num .p{font-family:var(--mono);font-size:12.5px;color:rgba(255,255,255,.6);margin-top:2px}
+      .splitbar{display:flex;height:16px;border:1px solid rgba(255,255,255,.4);border-radius:99px;overflow:hidden;margin:22px 0 8px;background:rgba(255,255,255,.08)}
+      .splitbar .y{background:var(--lime);transition:width .6s ease}
+      .splitbar .n{flex:1;background:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(255,255,255,.14) 5px,rgba(255,255,255,.14) 6px)}
+      .splitbar-lab{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6)}
+      .meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid rgba(255,255,255,.22);border-radius:10px;margin-top:20px;overflow:hidden;background:rgba(255,255,255,.22)}
+      .meta-cell{padding:13px 16px;background:var(--black)}
+      .meta-cell .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:rgba(255,255,255,.55)}
+      .meta-cell .v{font-family:var(--mono);font-size:14.5px;font-weight:700;margin-top:3px;overflow-wrap:break-word;color:var(--white)}
+      .meta-cell .v a{text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.5);color:var(--white)}
+      #featBox{margin-top:22px}
+      #featBox .feat-top{padding:10px 18px}
+      #featBox .feat-body{padding:6px 18px 18px}
+      #featBox .feat-q{font-size:clamp(22px,3vw,34px);margin:0 0 14px;max-width:30ch}
+      #featBox .ob-n{font-size:clamp(28px,4vw,44px)}
+      #featBox .splitbar{height:12px;margin:14px 0 6px}
+      #featBox .meta-grid{margin-top:14px}
+      #featBox .meta-cell{padding:9px 13px}
+      #featBox .meta-cell .v{font-size:13px;margin-top:2px}
+      .feat-chart{margin-top:18px}
+      .feat-chart svg{width:100%;height:auto;display:block}
+      .feat-chart svg .chart-price{stroke:var(--lime)}
+      /* hero: two columns, outcome blocks left, forecast card right */
+      .feat-cols{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:stretch;margin-top:4px}
+      .outcome-blocks{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      .outcome-block{border:1.5px solid rgba(255,255,255,.35);border-radius:12px;padding:14px 16px;background:rgba(255,255,255,.06)}
+      .outcome-block.lead{background:var(--lime);border-color:var(--lime);color:var(--black)}
+      .outcome-block.lead .ob-l,.outcome-block.lead .ob-p{color:rgba(0,0,0,.62)}
+      .ob-l{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.6)}
+      .ob-n{font-family:var(--sans);font-size:clamp(32px,4.5vw,52px);line-height:1;font-weight:900;margin-top:6px}
+      .ob-p{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,.6);margin-top:6px}
+      .feat-fc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column}
+      .fc-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+      .fc-head b{font-size:15px}
+      .fc-reason{font-size:13.5px;line-height:1.55;color:rgba(255,255,255,.85);margin:10px 0 0}
+      .feat-fc .feat-chart{margin-top:12px}
+      .trade-locked{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .trade-locked .btn{width:100%;min-height:52px;font-size:15px;border-radius:10px}
+      .trade-locked .btn-locked{background:var(--white);color:var(--black);border-color:var(--white)}
+      .trade-note{grid-column:1/-1;text-align:center;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:rgba(255,255,255,.65);margin:2px 0 0}
+
+      /* market cards */
+      .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      .card{border:1.5px solid var(--hair);border-radius:12px;background:var(--card);padding:18px;display:flex;flex-direction:column;gap:10px;text-align:left;width:100%;cursor:pointer;transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease;font-size:14px;color:var(--black)}
+      .card:hover{border-color:var(--black);transform:translateY(-2px);box-shadow:0 8px 20px rgba(17,17,17,.12)}
+      .card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+      .card-top .sec-note{font-size:10.5px;letter-spacing:.04em}
+      .card-q{font-family:var(--sans);font-size:18px;line-height:1.28;font-weight:800;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:46px;letter-spacing:-.01em}
+      .card-split{display:flex;height:10px;border:1px solid var(--black);border-radius:99px;overflow:hidden}
+      .card-split .y{background:var(--lime)}
+      .card-split .n{flex:1;background:rgba(17,17,17,.07)}
+      .card-outcomes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      .oc{border:1.5px solid var(--hair);border-radius:8px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+      .oc .s{font-size:12.5px;font-weight:700}
+      .oc .p{font-family:var(--mono);font-weight:700;font-size:15px}
+      .oc.first{background:var(--lime);border-color:var(--black)}
+      .card-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--grey);padding-top:9px;gap:6px;flex-wrap:wrap}
+      .empty{border:1.5px dashed var(--hair-strong);border-radius:12px;padding:36px;text-align:center;color:var(--grey);font-size:14.5px;grid-column:1/-1;background:var(--card)}
+      .empty b{color:var(--black)}
+      .pill--sm{font-size:9px;padding:2px 7px;letter-spacing:.06em}
+      .show-more-box{margin-top:16px;text-align:center}
+      .show-more-box .btn{min-height:52px;padding:0 28px;border-radius:10px;font-size:15px}
+
+      /* search + sectors */
+      .search-row{display:flex;gap:10px;margin:20px 0 12px}
+      .search-row input{flex:1;border:1.5px solid var(--black);border-radius:10px;background:var(--card);padding:12px 16px;font-size:15px;font-family:inherit;color:var(--black);min-height:52px;box-shadow:5px 5px 0 var(--lime)}
+      .search-row input::placeholder{color:var(--grey-2)}
+      .sector-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}
+      .sector-tab{border:1.5px solid var(--black);border-radius:99px;background:var(--card);padding:8px 14px;font-size:13.5px;font-weight:700;min-height:40px;display:inline-flex;align-items:center;gap:10px}
+      .sector-tab:hover{background:var(--card-2)}
+      .sector-tab.on{background:var(--black);color:var(--white)}
+      .sector-tab .n{font-family:var(--mono);font-weight:400;opacity:.7}
+      .sector-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+
+      /* forecast */
+      .fc{font-size:13.5px;line-height:1.5;color:#3d3a34;padding-top:9px;margin:0}
+      .fc b{color:var(--black)}
+      .flag-chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;border:1px solid var(--black);background:var(--black);color:var(--lime);border-radius:99px;padding:3px 9px;white-space:nowrap}
+      .star{flex:none;font-size:18px;line-height:1;color:var(--grey-2);padding:6px 4px;min-height:0;border-radius:3px;user-select:none}
+      .star:hover{color:var(--black)}
+      .star.on{color:var(--black)}
+      .star:focus-visible{outline:2px solid var(--black);outline-offset:2px}
+
+      /* price alerts */
+      .alert-list{display:flex;flex-direction:column;gap:10px}
+      .alert-item{border:1.5px solid var(--hair);border-left:4px solid var(--black);border-radius:10px;background:var(--card);padding:13px 16px}
+      .alert-item .aq{font-family:var(--sans);font-weight:800;font-size:16px;margin:0 0 3px}
+      .alert-item .ar{margin:0;color:#3d3a34;font-size:14px}
+      .alert-item .ak{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--grey);margin-bottom:5px}
+      .alerts-dark .alert-item{background:var(--black);color:var(--white);border-color:var(--black)}
+      .alerts-dark .alert-item .aq{color:var(--white)}
+      .alerts-dark .alert-item .ar{color:rgba(255,255,255,.75)}
+      .alerts-dark .alert-item .ak{color:var(--lime)}
+      .quiet{border:1.5px dashed var(--hair-strong);border-radius:12px;padding:22px;text-align:center;color:var(--grey);font-size:14.5px;background:var(--card)}
+      .news-list{display:flex;flex-direction:column}
+      .news-item{display:flex;gap:14px;justify-content:space-between;align-items:flex-start;padding:13px 2px}
+      .news-item a{font-weight:700;font-size:15px;text-decoration:none;line-height:1.4}
+      .news-item a:hover{text-decoration:underline}
+      .news-meta{font-family:var(--mono);font-size:11px;color:var(--grey);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+      .news-tag{font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--hair-strong);border-radius:99px;padding:2px 8px;color:var(--black)}
+      .news-feature{border:1.5px solid var(--black);border-radius:14px;background:var(--black);color:var(--white);padding:22px;margin-bottom:18px;position:relative;overflow:hidden}
+      .news-feature::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(380px 200px at 90% -10%, rgba(200,245,66,.45), rgba(200,245,66,0) 70%)}
+      .news-feature a{color:var(--white);font-family:var(--sans);font-size:clamp(20px,3vw,28px);font-weight:800;line-height:1.2;text-decoration:none;letter-spacing:-.02em;position:relative}
+      .news-feature a:hover{text-decoration:underline}
+      .news-feature .news-meta{color:rgba(255,255,255,.65);position:relative}
+      .news-feature .news-tag{border-color:rgba(255,255,255,.5);color:var(--white)}
+      .news-feature .news-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--lime);margin:0 0 10px;position:relative}
+      .mood-line{font-size:13.5px;color:var(--grey);margin:0 0 6px}
+      .watch-item{border:1.5px solid var(--hair);border-radius:12px;background:var(--card);padding:15px 17px;margin-bottom:10px}
+      .watch-item .wq{font-family:var(--sans);font-weight:800;font-size:17px;margin:0 0 4px}
+      .watch-item .wq button{background:none;border:0;padding:0;font:inherit;text-align:left;font-weight:800}
+      .watch-item .wq button:hover{text-decoration:underline}
+      .watch-kv{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--grey);margin-top:6px;align-items:center}
+      .watch-kv b{color:var(--black)}
+      .watch-alert{margin:8px 0 0;font-size:13.5px;color:#3d3a34}
+      .watch-alert b{color:var(--black)}
+      .watch-note{border:1.5px solid var(--black);border-radius:12px;background:var(--ivory);padding:15px 18px;margin:0 0 18px;font-size:14.5px;color:#3d3a34}
+      .watch-note b{color:var(--black)}
+
+      /* steps */
+      .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      .step{border:1.5px solid var(--hair);border-radius:12px;padding:24px;background:var(--card)}
+      .step .num{font-family:var(--sans);font-size:38px;font-weight:900;line-height:1}
+      .step .num i{font-style:normal;box-shadow:inset 0 -9px 0 var(--lime)}
+      .step h3{font-family:var(--sans);font-size:19px;font-weight:800;margin:12px 0 5px}
+      .step p{margin:0;color:var(--grey);font-size:14px}
+      .doc-cta{border:1.5px solid var(--black);border-radius:12px;background:var(--card);padding:20px 24px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:20px}
+      .doc-cta h3{font-family:var(--sans);font-size:19px;font-weight:800;margin:0 0 4px}
+      .doc-cta p{margin:0;color:var(--grey);font-size:14px;flex:1;min-width:230px}
+
+      /* market page */
+      .mkt-single{max-width:none}
+      .mkt-cols{display:grid;grid-template-columns:1fr;gap:16px;margin-top:14px;align-items:start}
+      .mkt-cols>*{min-width:0}
+      .mkt-side{order:2;min-width:0}
+      .mkt-cols #chartPanel{order:1}
+      .mkt-cols #tradePanel{order:3}
+      .mkt-cols .books{order:4;margin-top:0}
+      .mkt-cols .feat{min-width:0}
+      .mkt-cols .feat{margin-top:0}
+      .mkt-q{font-family:var(--sans);font-size:clamp(28px,4.5vw,48px);font-weight:900;letter-spacing:-.03em;line-height:1.05;margin:12px 0 8px}
+      .mkt-q .hl{background:linear-gradient(transparent 62%, var(--lime) 62%)}
+      .chart-panel{border:1.5px solid var(--hair);border-radius:12px;background:var(--card);padding:18px}
+      .chart-panel h3{font-family:var(--sans);font-size:18px;font-weight:800;margin:0 0 6px}
+      .chart-note{margin:0;color:#3d3a34;font-size:13.5px;line-height:1.6}
+      .chart-svg{width:100%;height:auto;display:block;margin-top:12px}
+      .chart-kv{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--grey);margin-top:12px;align-items:center}
+      .chart-kv b{color:var(--black)}
+      .market-status-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px}
+      .feat--mt14{margin-top:14px}
+      .meta-grid--2{grid-template-columns:repeat(2,1fr)}
+      .panel{border:1.5px solid var(--hair);border-radius:12px;background:var(--card);margin-top:16px;padding:18px}
+      .panel h3{font-family:var(--sans);font-size:18px;font-weight:800;margin:0 0 12px}
+      .panel-text{margin:0;color:#3d3a34;font-size:14.5px;line-height:1.6}
+      .panel-text + .panel-text{margin-top:10px}
+      .kv{display:flex;justify-content:space-between;gap:14px;padding:8px 0;font-size:13.5px}
+      .kv .k{color:var(--grey);flex:none}
+      .kv .v{font-family:var(--mono);font-weight:700;text-align:right;overflow-wrap:break-word}
+      .kv .v a{text-decoration:none;border-bottom:1px dotted var(--hair-strong)}
+      .panel--black{background:var(--black);color:var(--white);border-color:var(--black)}
+      .panel--black h3{color:var(--white)}
+      .panel--black .panel-text{color:rgba(255,255,255,.8)}
+      .panel--black .kv .k{color:rgba(255,255,255,.6)}
+      .panel--black .kv .v{color:var(--white)}
+      .panel--black .fc{color:rgba(255,255,255,.8)}
+      .panel--black .fc b{color:var(--white)}
+
+      /* order book */
+      .books{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+      .books>*{min-width:0}
+      .book{min-width:0}
+      .book{border:1.5px solid var(--hair);border-radius:12px;background:var(--card);overflow:hidden}
+      .book-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px}
+      .book-head .t{font-weight:800;font-size:14px}
+      .book-head .t.first{box-shadow:inset 0 -6px 0 var(--lime)}
+      .book-head .bp{font-family:var(--mono);font-size:13px;font-weight:700}
+      .book table{width:100%;border-collapse:collapse;font-size:13px}
+      .book th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--grey);text-align:right;padding:8px 16px 4px}
+      .book th:first-child{text-align:left}
+      .book td{font-family:var(--mono);padding:6px 16px;text-align:right;position:relative}
+      .book td:first-child{text-align:left;font-weight:700}
+      .book td.best{font-weight:700}
+      .book td.bid{color:#1E7D32}
+      .book td.ask{color:#C62828}
+      .book .asks-lab,.book .bids-lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;padding:10px 16px 0;text-align:left}
+      .book .asks-lab{color:#C62828}
+      .book .bids-lab{color:#1E7D32}
+      .book .bp-bid{color:#1E7D32}
+      .book .bp-ask{color:#C62828}
+      .book .book-empty{padding:16px;color:var(--grey);font-size:13.5px}
+      .book tr.depth td{background:linear-gradient(to right, rgba(30,125,50,.08) var(--depth,0%), transparent var(--depth,0%))}
+      .book tr.depth-ask td{background:linear-gradient(to right, rgba(198,40,40,.08) var(--depth,0%), transparent var(--depth,0%))}
+
+      /* trade panel (locked) */
+      .trade-panel{border:1.5px solid var(--black);border-radius:12px;background:var(--card);margin-top:16px;padding:18px}
+      .trade-panel h3{font-family:var(--sans);font-size:18px;font-weight:800;margin:0 0 4px}
+      .trade-panel .trade-sub{margin:0 0 14px;color:var(--grey);font-size:13.5px}
+      .trade-prices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+      .trade-price{border:1.5px solid var(--hair);border-radius:10px;padding:12px 14px}
+      .trade-price .l{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--grey)}
+      .trade-price .p{font-family:var(--mono);font-size:22px;font-weight:700;margin-top:2px}
+      .trade-price.up .p{color:var(--bid)}
+      .trade-price.down .p{color:var(--ask)}
+      .trade-amount{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+      .trade-amount label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--grey);flex:none}
+      .trade-amount input{flex:1;border:1.5px solid var(--hair);border-radius:10px;padding:12px 14px;font-size:15px;font-family:var(--mono);color:var(--black);min-height:48px;background:var(--card-2)}
+      .trade-panel .btn{width:100%;min-height:52px;font-size:15px;border-radius:10px}
+      .trade-panel .trade-note{text-align:center;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--grey);margin:10px 0 0}
+
+      /* error state */
+      .error-box{border:1.5px solid var(--black);border-radius:12px;background:var(--card);padding:28px 24px;text-align:center;margin-top:18px}
+      .error-box h3{font-family:var(--sans);font-size:21px;font-weight:800;margin:0 0 8px}
+      .error-box p{color:var(--grey);margin:0 auto 18px;max-width:46ch;font-size:14.5px}
+
+      /* docs */
+      .docs-layout{display:grid;grid-template-columns:220px 1fr;gap:36px;margin-top:28px;align-items:start}
+      .docs-nav{position:sticky;top:84px;background:var(--ivory);border:1.5px solid var(--hair);border-radius:12px;padding:14px}
+      .docs-nav h3{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--grey);margin:4px 8px 10px}
+      .docs-nav a{display:block;padding:9px 10px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;color:var(--black)}
+      .docs-nav a:hover{background:rgba(17,17,17,.06)}
+      .docs-nav a.on{background:var(--black);color:var(--white)}
+      .docs-col{min-width:0}
+      .doc-sec{margin-top:0;max-width:80ch;margin-bottom:36px}
+      .doc-sec h2{font-family:var(--sans);font-size:clamp(22px,5vw,26px);font-weight:800;margin:0 0 8px;letter-spacing:-.02em}
+      .doc-sec p{color:#3d3a34;font-size:15px;margin:0 0 10px}
+      .doc-sec h3{font-family:var(--sans);font-size:19px;font-weight:800;margin:18px 0 6px}
+      .terms-list{margin:8px 0 10px;padding-left:20px;color:#3d3a34;font-size:15px}
+      .terms-list li{margin:0 0 8px}
+      #view-docs .page-head{text-align:left}
+      #view-docs .page-head .back-btn{display:block;margin:0}
+      #view-docs .page-sub{margin-left:0;margin-right:0}
+      #view-docs .doc-sec{margin-left:0;margin-right:0;text-align:left}
+      #view-docs .doc-sec .terms-list{text-align:left;list-style-position:outside;padding-left:20px}
+      .doc-callout{border:1.5px solid var(--black);border-radius:12px;background:var(--black);color:var(--white);padding:18px 20px;font-size:15px;line-height:1.55;margin-bottom:36px}
+      .doc-callout b{color:var(--lime)}
+      /* docs graphics: black ground, one lime glow, one sharp accent, grain on top */
+      .doc-graphic{position:relative;overflow:hidden;background:var(--black);color:var(--white);border-radius:14px;padding:22px;margin:18px 0 10px}
+      .doc-graphic::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(340px 190px at 88% -10%, rgba(200,245,66,.42), rgba(200,245,66,0) 70%)}
+      .doc-graphic>*{position:relative}
+      .doc-grain{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+      .flow-line{height:2px;background:linear-gradient(90deg,var(--lime),rgba(200,245,66,.12));border-radius:2px;margin:2px 0 18px}
+      .flow-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+      .flow-step .n{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--lime);letter-spacing:.12em}
+      .flow-step h4{margin:6px 0 4px;font-size:15px;font-weight:800}
+      .flow-step p{font-size:13px;line-height:1.5;color:rgba(255,255,255,.75);margin:0}
+      .fc-graphic{display:grid;grid-template-columns:1fr 44px 1.1fr;gap:12px;align-items:stretch}
+      .mini-book{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:12px 14px;font-family:var(--mono);font-size:12px}
+      .mini-book .mb-title{font-size:10.5px;letter-spacing:.12em;color:rgba(255,255,255,.6);margin-bottom:6px}
+      .mb-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+      .mb-row .bid{color:#7ED07A}
+      .mb-row .ask{color:#F28B82}
+      .fc-arrow{display:grid;place-items:center;color:var(--lime)}
+      .mini-fc{background:rgba(200,245,66,.12);border:1px solid rgba(200,245,66,.55);border-radius:10px;padding:12px 14px}
+      .mini-fc .pill{margin-bottom:8px}
+      .mini-fc b{font-size:15px;display:block;margin-bottom:4px}
+      .mini-fc p{font-size:13px;line-height:1.5;color:rgba(255,255,255,.85);margin:0}
+      .loop-wrap{display:grid;grid-template-columns:210px 1fr;gap:20px;align-items:center}
+      .loop-ring{width:210px;max-width:100%;height:auto;display:block;margin:0 auto}
+      .loop-steps{list-style:none;margin:0;padding:0}
+      .loop-steps li{display:flex;gap:12px;padding:9px 0;font-size:14px;line-height:1.5;color:rgba(255,255,255,.85)}
+      .loop-steps .n{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--lime);letter-spacing:.08em;flex:none;padding-top:2px}
+      .doc-offer{list-style:none;margin:12px 0 0;padding:0}
+      .doc-offer li{position:relative;padding:0 0 10px 22px;font-size:15px;line-height:1.55;color:#3d3a34}
+      .doc-offer li::before{content:"";position:absolute;left:2px;top:9px;width:8px;height:8px;border-radius:50%;background:var(--lime);border:1.5px solid var(--black)}
+      .spacer-48{height:48px}
+      .spacer-56{height:56px}
+
+      /* categories */
+      .cat-block{margin-top:26px}
+      .cat-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin:0 0 12px;flex-wrap:wrap;padding-bottom:8px}
+      .cat-title{font-family:var(--sans);font-size:20px;font-weight:800;margin:0}
+
+      /* footer */
+      footer{padding:40px 0 48px;margin-top:24px;background:var(--black);color:var(--white)}
+      .foot-in{display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap;align-items:flex-start}
+      .foot-links{display:flex;gap:22px;flex-wrap:wrap}
+      .foot-links button{background:none;border:0;font-size:14px;font-weight:600;text-decoration:none;padding:6px 2px;min-height:40px;color:var(--white)}
+      .foot-links button:hover{text-decoration:underline}
+      footer .brand-name{color:var(--white)}
+      .foot-tag{font-size:14px;color:rgba(255,255,255,.65);align-self:center}
+      .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(16px);opacity:0;visibility:hidden;background:var(--black);color:var(--white);border-radius:10px;padding:13px 20px;font-size:14px;font-weight:600;z-index:300;transition:transform .25s ease,opacity .25s ease,visibility .25s;max-width:92vw;text-align:center;border:1px solid var(--black)}
+      .toast.show{transform:translateX(-50%) translateY(0);opacity:1;visibility:visible}
+      .toast b{color:var(--lime)}
+      .mobile-nav{display:none}
+
+      /* motion */
+      @keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+      .view.on{animation:riseIn .35s ease backwards}
+      .card{animation:riseIn .5s ease backwards}
+      .grid .card:nth-child(2){animation-delay:.06s}
+      .grid .card:nth-child(3){animation-delay:.12s}
+      .grid .card:nth-child(4){animation-delay:.18s}
+      .grid .card:nth-child(5){animation-delay:.24s}
+      .grid .card:nth-child(6){animation-delay:.3s}
+      .doc-sec{animation:riseIn .55s ease backwards}
+      .cat-block{animation:riseIn .5s ease backwards}
+      .card-split .y{transition:width .6s ease}
+      .grid.painted .card{animation:none}
+      .cat-block.painted{animation:none}
+      #featBox{cursor:pointer}
+      @keyframes tickUp{0%{background:rgba(30,125,50,.22)}100%{background:transparent}}
+      @keyframes tickDown{0%{background:rgba(198,40,40,.22)}100%{background:transparent}}
+      .tick-up{animation:tickUp 1s ease-out forwards;border-radius:3px}
+      .tick-down{animation:tickDown 1s ease-out forwards;border-radius:3px}
+      @keyframes chartDraw{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+      .chart-line{stroke-dasharray:100;stroke-dashoffset:100;animation:chartDraw 1s ease-out forwards}
+      @keyframes chartFade{from{opacity:0}to{opacity:1}}
+      .chart-fade{animation:chartFade .6s ease .35s backwards}
+      @media (max-width:1180px){
+        .mkt-cols .split-num{flex:1 1 0;min-width:0}
+      }
+      @media (max-width:980px){
+        .grid{grid-template-columns:repeat(2,1fr)}
+        .meta-grid{grid-template-columns:repeat(2,1fr)}
+        .steps{grid-template-columns:repeat(2,1fr)}
+        .docs-layout{grid-template-columns:1fr;gap:20px}
+        .docs-nav{position:static;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+        .docs-nav h3{width:100%;margin-bottom:4px}
+        .docs-nav a{padding:7px 10px}
+      }
+      @media (max-width:900px){
+        .nav-auth{display:none}
+        .nav-right .nav-menu{display:inline-grid}
+      }
+      @media (max-width:680px){
+        .wrap{padding:0 16px}
+        .nav-in{padding:0 16px;gap:12px}
+        .brand-name{font-size:18px}
+        .nav-links{display:none}
+        .nav-auth{display:none}
+        .nav-right .nav-menu{display:inline-grid}
+        .feat-cols{grid-template-columns:1fr}
+        .page-head{padding:22px 0 4px}
+        #featBox{margin-top:10px}
+        #featBox .feat-top{padding:6px 12px}
+        #featBox .feat-body{padding:10px 12px}
+        #featBox .feat-q{font-size:22px;margin:0 0 10px}
+        #featBox .ob-n{font-size:30px}
+        #featBox .splitbar{margin:10px 0 5px}
+        #featBox .meta-grid{margin-top:10px}
+        #featBox .meta-cell{padding:6px 10px}
+        #featBox .feat-ribbon{width:220px;height:220px;top:-50px;right:-50px}
+        .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+        .card{padding:13px;gap:8px}
+        .card-q{font-size:14.5px;min-height:38px}
+        .card-split{height:8px}
+        .oc{padding:7px 8px}
+        .oc .s{font-size:11.5px}
+        .oc .p{font-size:13px}
+        .steps{grid-template-columns:1fr}
+        .mkt-cols .feat-body{padding:18px 16px}
+        .split-nums{gap:16px}
+        .split-num{flex:1 1 0;min-width:0}
+        .split-num .p{font-size:11px}
+        .meta-cell{padding:10px 12px}
+        .meta-cell .v{font-size:13px}
+        .kv{flex-direction:column;gap:2px}
+        .kv .v{text-align:left}
+        .chart-panel{padding:14px}
+        .chart-kv{gap:12px;font-size:11.5px}
+        .books{grid-template-columns:1fr}
+        .book th,.book td{padding-left:12px;padding-right:12px}
+        .mobile-nav button{font-size:12px;padding:10px 2px;white-space:nowrap}
+        .ticker-in{padding-left:16px;padding-right:16px}
+        .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--white);z-index:120;padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--hair)}
+        .mobile-nav button{flex:1;background:none;border:0;font-size:12.5px;font-weight:700;padding:10px 4px;min-height:48px;border-radius:3px}
+        .mobile-nav button.on{box-shadow:inset 0 -3px 0 var(--lime)}
+        body{padding-bottom:64px}
+        .trade-locked{grid-template-columns:1fr 1fr}
+        .trade-prices{grid-template-columns:1fr 1fr}
+        .flow-steps{grid-template-columns:1fr;gap:14px}
+        .fc-graphic{grid-template-columns:1fr}
+        .fc-arrow svg{transform:rotate(90deg)}
+        .loop-wrap{grid-template-columns:1fr}
+        .doc-graphic{padding:18px 16px}
+      }
+      @media (max-width:460px){
+        .grid{grid-template-columns:1fr}
+        .card{padding:16px}
+        .card-q{font-size:16.5px;min-height:0}
+        .meta-grid{grid-template-columns:repeat(2,1fr)}
+      }
+      @media (prefers-reduced-motion:reduce){
+        *{transition:none !important;animation:none !important}
+        .ticker-in{overflow-x:auto}
+      }
+    </style>
+  </head>
+  <body>
+    <!-- nav -->
+    <header class="nav">
+      <div class="nav-in">
+        <a class="brand" href="#" data-nav="home" aria-label="prognosis home">
+          <img src="logo-light.png" width="34" height="34" alt="prognosis logo" />
+          <span class="brand-name">prognosis</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <button type="button" data-nav="home" class="on">Markets</button>
+          <button type="button" data-nav="watchlist">Watchlist</button>
+          <button type="button" data-nav="news">News</button>
+          <button type="button" data-nav="docs">Documentation</button>
+        </nav>
+        <div class="nav-right">
+          <button type="button" class="icon-btn nav-bell" id="bellBtn" aria-label="Price alerts" title="Price alerts"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
+          <button type="button" class="btn btn-black nav-auth" id="signInBtn">Sign in</button>
+          <button type="button" class="btn btn-lime nav-auth" id="createBtn">Create account</button>
+          <button type="button" class="icon-btn nav-menu" id="menuBtn" aria-label="Menu">☰</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <button type="button" data-nav="home">Markets</button>
+      <button type="button" data-nav="watchlist">Watchlist</button>
+      <button type="button" data-nav="news">News</button>
+      <button type="button" data-nav="docs">Documentation</button>
+      <button type="button" class="btn btn-black" id="mSignInBtn">Sign in</button>
+      <button type="button" class="btn btn-lime" id="mCreateBtn">Create account</button>
+    </div>
+
+    <div class="ticker" id="ticker" style="display:none" aria-label="Asset prices">
+      <div class="ticker-in" id="tickerIn"></div>
+    </div>
+
+    <main id="main">
+      <!-- home -->
+      <section class="view on" id="view-home">
+        <div class="wrap">
+          <div class="page-head page-head--row">
+            <div>
+              <h1 class="page-title">Trade the question.</h1>
+              <p class="page-sub">Prognosis is a prediction market. Each market asks one question about what happens next. The price shows the chance traders give the event, and it moves with every trade. When the event ends, the market settles on the real outcome.</p>
+            </div>
+            <button type="button" class="icon-btn" id="refreshBtn" aria-label="Refresh prices" title="Refresh prices">↻</button>
+          </div>
+
+          <div id="homeError" class="error-box" style="display:none">
+            <h3>Could not reach the markets</h3>
+            <p>The market data could not be loaded. Check your connection and try again.</p>
+            <button type="button" class="btn btn-lime" id="retryBtn">Retry</button>
+          </div>
+
+          <div class="feat" id="featBox">
+            <div class="feat-ribbon" aria-hidden="true"><img src="logo-dark.png" alt="" /></div>
+            <div class="feat-top">
+              <span class="pill">FEATURED</span>
+              <span class="sec-note" id="featCountdown"></span>
+              <span class="pill" id="featStatus">LOADING</span>
+            </div>
+            <div class="feat-body">
+              <h2 class="feat-q" id="featQ">Loading markets…</h2>
+              <div class="feat-cols">
+                <div class="feat-left">
+                  <div class="outcome-blocks">
+                    <div class="outcome-block" id="featBlock0">
+                      <div class="ob-l" id="featL0">OUTCOME</div>
+                      <div class="ob-n" id="featP0">…</div>
+                      <div class="ob-p" id="featBid0">…</div>
+                    </div>
+                    <div class="outcome-block" id="featBlock1">
+                      <div class="ob-l" id="featL1">OUTCOME</div>
+                      <div class="ob-n" id="featP1">…</div>
+                      <div class="ob-p" id="featBid1">…</div>
+                    </div>
+                  </div>
+                  <div class="splitbar" aria-hidden="true"><div class="y" id="featBarY" style="width:50%"></div><div class="n"></div></div>
+                  <div class="splitbar-lab"><span id="featBarLabL">OUTCOME SHARE OF PRICE</span><span id="featBarLab">…</span></div>
+                </div>
+                <div class="feat-fc" id="featFc">
+                  <div class="fc-head"><span class="pill">FORECAST</span><b id="featFcVerdict">…</b></div>
+                  <p class="fc-reason" id="featFcReason">…</p>
+                  <div class="feat-chart" id="featChart" style="display:none"></div>
+                </div>
+              </div>
+              <div class="meta-grid">
+                <div class="meta-cell"><div class="k">VOLUME</div><div class="v" id="featVolume">…</div></div>
+                <div class="meta-cell"><div class="k">SPREAD</div><div class="v" id="featSpread">…</div></div>
+                <div class="meta-cell"><div class="k">LAST PRICE</div><div class="v" id="featLast">…</div></div>
+                <div class="meta-cell"><div class="k">WIN LINE</div><div class="v" id="featWinLine">…</div></div>
+              </div>
+              <div class="trade-locked">
+                <button type="button" class="btn btn-locked" disabled><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Buy Up · <span id="featBuyUp">…</span></button>
+                <button type="button" class="btn btn-locked" disabled><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Buy Down · <span id="featBuyDown">…</span></button>
+                <p class="trade-note">TRADING OPENS SOON · WATCHING AND FORECASTS ARE LIVE NOW</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-head">
+            <h2 class="sec-title" id="gridTitle">All markets</h2>
+            <span class="sec-note" id="gridNote">PRICES FROM THE ORDER BOOK</span>
+          </div>
+          <div class="search-row">
+            <input type="search" id="searchInput" placeholder="Search 100 markets by asset or question" aria-label="Search markets" autocomplete="off" />
+          </div>
+          <div class="sector-tabs" id="sectorTabs" role="tablist" aria-label="Sectors"></div>
+          <div id="marketGrid"></div>
+          <div class="show-more-box" id="showMoreBox" style="display:none">
+            <button type="button" class="btn btn-black" id="showMoreBtn">Show more markets</button>
+          </div>
+
+          <div id="watchdogSection" style="display:none">
+            <div class="sec-head">
+              <h2 class="sec-title">Price alerts</h2>
+            </div>
+            <div id="watchdogBox"></div>
+          </div>
+
+          <div class="sec-head"><h2 class="sec-title">How it works</h2></div>
+          <div class="steps">
+            <div class="step"><div class="num"><i>1</i></div><h3>Pick a market</h3><p>Choose a question and read the price. The price shows the chance traders give the event, and it moves with every trade.</p></div>
+            <div class="step"><div class="num"><i>2</i></div><h3>Read the order book</h3><p>Each market shows the full order book for both outcomes: the bids and asks on each side, so you can see the depth behind the price.</p></div>
+            <div class="step"><div class="num"><i>3</i></div><h3>See how it settles</h3><p>When the event ends, the market settles on the real outcome, from the source stated on the market page. The side that called it right is the winning side.</p></div>
+          </div>
+          <div class="doc-cta">
+            <div><h3>Documentation</h3><p>What Prognosis is, what it offers and how it works, and the terms, in plain words.</p></div>
+            <button type="button" class="btn btn-black" data-nav="docs">Read the documentation →</button>
+          </div>
+          <div class="spacer-56"></div>
+        </div>
+      </section>
+
+      <!-- news -->
+      <section class="view" id="view-news">
+        <div class="wrap">
+          <div class="page-head">
+            <button type="button" class="back-btn" data-nav="home">← Markets</button>
+            <h1 class="page-title">Market news.</h1>
+            <p class="page-sub">The latest crypto headlines, newest first. Each one links to the story, and the tags show which asset it mentions.</p>
+          </div>
+          <div id="newsBox"><div class="quiet">Loading the latest headlines…</div></div>
+          <div class="spacer-56"></div>
+        </div>
+      </section>
+
+      <!-- market -->
+      <section class="view" id="view-market">
+        <div class="wrap">
+          <div class="mkt-single">
+            <div class="page-head">
+              <button type="button" class="back-btn" data-nav="home">← All markets</button>
+              <h1 class="mkt-q" id="mQ">Market</h1>
+              <div class="market-status-row">
+                <span class="pill" id="mStatus">LOADING</span>
+                <span class="sec-note" id="mCountdown"></span>
+                <button type="button" class="icon-btn" id="mStar" aria-label="Keep this market on your watchlist" title="Keep on your watchlist">☆</button>
+              </div>
+            </div>
+            <div class="mkt-cols">
+              <div class="chart-panel" id="chartPanel">
+                <h3>The price over the window</h3>
+                <p class="chart-note" id="chartNote">Loading the chart…</p>
+                <div id="chartBox"></div>
+                <div class="chart-kv" id="chartKv" style="display:none"></div>
+              </div>
+              <div class="mkt-side">
+                <div class="feat feat--mt14">
+                  <div class="feat-body">
+                    <div class="split-nums">
+                      <div class="split-num first"><div class="n" id="mP0">…</div><div class="l" id="mL0">OUTCOME</div><div class="p" id="mBid0">…</div></div>
+                      <div class="split-num"><div class="n" id="mP1">…</div><div class="l" id="mL1">OUTCOME</div><div class="p" id="mBid1">…</div></div>
+                    </div>
+                    <div class="splitbar" aria-hidden="true"><div class="y" id="mBarY" style="width:50%"></div><div class="n"></div></div>
+                    <div class="splitbar-lab"><span id="mBarLabL">OUTCOME SHARE OF PRICE</span><span id="mBarLab">…</span></div>
+                    <div class="meta-grid meta-grid--2">
+                      <div class="meta-cell"><div class="k">EXPIRES</div><div class="v" id="mExpiry">…</div></div>
+                      <div class="meta-cell"><div class="k">VOLUME</div><div class="v" id="mVolume">…</div></div>
+                      <div class="meta-cell"><div class="k">LAST PRICE</div><div class="v" id="mLast">…</div></div>
+                      <div class="meta-cell"><div class="k">WINDOW</div><div class="v" id="mWindow">…</div></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel panel--black" id="mForecastPanel">
+                  <h3>Forecast</h3>
+                  <p class="panel-text" id="mForecastText">…</p>
+                  <div class="kv"><span class="k">Based on</span><span class="v" id="mForecastBasis">…</span></div>
+                  <div class="kv" id="mForecastLineRow" style="display:none"><span class="k">Distance from the win line</span><span class="v" id="mForecastLine">…</span></div>
+                </div>
+              </div>
+
+              <div class="trade-panel" id="tradePanel">
+                <h3>Trade this market</h3>
+                <p class="trade-sub">Buy Up or Down. Trading has not opened yet.</p>
+                <div class="trade-prices">
+                  <div class="trade-price up"><div class="l" id="tradeL0">UP</div><div class="p" id="tradeP0">…</div></div>
+                  <div class="trade-price down"><div class="l" id="tradeL1">DOWN</div><div class="p" id="tradeP1">…</div></div>
+                </div>
+                <div class="trade-amount">
+                  <label for="tradeAmount">AMOUNT</label>
+                  <input type="text" id="tradeAmount" value="0.00" disabled aria-label="Amount" />
+                </div>
+                <button type="button" class="btn btn-black" disabled><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Trading opens soon</button>
+                <p class="trade-note">TRADING OPENS SOON · WATCHING AND FORECASTS ARE LIVE NOW</p>
+              </div>
+
+              <div class="books" id="mBooks">
+                <div class="book" id="book0"><div class="book-head"><span class="t first" id="book0Title">Outcome</span><span class="bp" id="book0Best">…</span></div><div class="book-empty">Loading the order book…</div></div>
+                <div class="book" id="book1"><div class="book-head"><span class="t" id="book1Title">Outcome</span><span class="bp" id="book1Best">…</span></div><div class="book-empty">Loading the order book…</div></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h3>How this market settles</h3>
+              <p class="panel-text" id="mDesc">…</p>
+              <p class="panel-text"><b>A person confirms the outcome.</b> The forecast never creates a market and never settles one.</p>
+              <div class="kv"><span class="k">Resolution source</span><span class="v" id="mSource">…</span></div>
+              <div class="kv"><span class="k">Status</span><span class="v" id="mResStatus">…</span></div>
+            </div>
+            <div class="spacer-56"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- watchlist -->
+      <section class="view" id="view-watchlist">
+        <div class="wrap">
+          <div class="page-head">
+            <h1 class="page-title">Markets you are watching.</h1>
+            <p class="page-sub">Star a market to keep it here.</p>
+          </div>
+          <p class="watch-note"><b>There are no positions here.</b> Trading has not opened yet, so this is a watchlist only. When trading opens, your positions will show here too.</p>
+          <div class="sec-head">
+            <h2 class="sec-title">Alerts</h2>
+            <span class="sec-note">PRICE MOVES · TIME LEFT · PRICE ALERTS</span>
+          </div>
+          <div id="watchAlerts" class="alerts-dark"><div class="quiet">No alerts right now.</div></div>
+          <div class="sec-head">
+            <h2 class="sec-title">Watched markets</h2>
+            <span class="sec-note" id="watchCount">0 MARKETS</span>
+          </div>
+          <div id="watchList"></div>
+          <div class="spacer-56"></div>
+        </div>
+      </section>
+
+      <!-- documentation -->
+      <section class="view" id="view-docs">
+        <div class="wrap">
+          <div class="page-head">
+            <button type="button" class="back-btn" data-nav="home">← Markets</button>
+            <h1 class="page-title">Documentation.</h1>
+            <p class="page-sub">How Prognosis works, what the forecast does for you, and the terms. Written in plain words, nothing hidden.</p>
+          </div>
+
+          <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="docGrain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0"/></filter></defs></svg>
+          <div class="docs-layout">
+            <nav class="docs-nav" aria-label="Documentation sections">
+              <h3>ON THIS PAGE</h3>
+              <a href="#doc-what" data-doc="doc-what" class="on">What Prognosis is about</a>
+              <a href="#doc-how" data-doc="doc-how">What it offers, and how it works</a>
+              <a href="#doc-forecast" data-doc="doc-forecast">How the forecast is worked out</a>
+              <a href="#doc-learn" data-doc="doc-learn">How the forecast learns</a>
+              <a href="#doc-watch" data-doc="doc-watch">Watchlist, alerts and news</a>
+              <a href="#doc-terms" data-doc="doc-terms">Terms and conditions</a>
+            </nav>
+            <div class="docs-col">
+              <div class="doc-callout"><b>A person decides every outcome.</b> The forecast never creates a market and never settles one.</div>
+
+              <div class="doc-sec" id="doc-what">
+                <h2>What Prognosis is about</h2>
+                <p>Prognosis is a prediction market with AI models built in. Every market asks one question about what happens next, with two outcomes. You follow the outcome you think will happen, and the price shows the chance traders give it. A price of 62% means the market, as a whole, puts the chance at about 62 in 100. The price is never set by us. It moves with every trade, as traders buy and sell and the balance of opinion shifts.</p>
+                <p>Most prediction markets show you a price and leave you to guess what it means. Prognosis does more. Every market carries a forecast from its AI models, with a plain-language reason for it. The models read the live order book, the spread, the time left and the volume, and they tell you, in words, which way the market leans and why. And they keep learning. Every time a market settles, the forecast it gave is scored against the real outcome, so the next forecast is sharper than the last. That is the whole point of Prognosis: a market that does not just show you the odds, it helps you read them.</p>
+                <p>Right now the markets are short crypto moves: up or down over the next few minutes. New questions arrive through the day, and the forecast is live on every one of them.</p>
+              </div>
+
+              <div class="doc-sec" id="doc-how">
+                <h2>What Prognosis offers, and how it works</h2>
+                <p>A market on Prognosis is simple on the surface and open underneath. Here is how one moves, from the question to the settlement.</p>
+                <div class="doc-graphic">
+                  <svg class="doc-grain" aria-hidden="true"><rect width="100%" height="100%" filter="url(#docGrain)"/></svg>
+                  <div class="flow-line"></div>
+                  <div class="flow-steps">
+                    <div class="flow-step"><div class="n">01</div><h4>One question</h4><p>Every market asks one thing about what happens next, with two outcomes.</p></div>
+                    <div class="flow-step"><div class="n">02</div><h4>Traders take a view</h4><p>Bids and asks pile up on each side, and the price moves with every trade.</p></div>
+                    <div class="flow-step"><div class="n">03</div><h4>The window closes</h4><p>When the time runs out, the market stops taking trades.</p></div>
+                    <div class="flow-step"><div class="n">04</div><h4>A person confirms it</h4><p>The outcome is settled on the real event, by a person, not by the forecast.</p></div>
+                  </div>
+                </div>
+                <h3>How a market works</h3>
+                <p>Each market asks one question and offers two outcomes. For a crypto market the question is whether the price closes up or down over a set window, five or fifteen minutes. Traders place bids and asks on each outcome, and those orders form the order book. The best bid is the highest price anyone will pay for an outcome right now. The best ask is the lowest price anyone will sell it for. The gap between them is the spread, and the last trade price is the price of the most recent trade.</p>
+                <h3>The order book</h3>
+                <p>The order book shows every open bid and ask for each outcome, best first. A deep book, with large sizes near the top, means many traders are willing to trade close to the current price. A thin book means one trade can move the price further. The market page shows the full book for both outcomes, so the depth behind the price is always visible. Nothing about the price is hidden.</p>
+                <h3>What you get on every market</h3>
+                <ul class="doc-offer">
+                  <li><b>A forecast on every market, with a plain-language reason,</b> so you never have to guess what the price means.</li>
+                  <li><b>The full order book on both sides,</b> so you can see the depth behind the price before you trust it.</li>
+                  <li><b>Price alerts</b> that flag a market when the price jumps, the spread widens or the quote goes stale.</li>
+                  <li><b>A watchlist</b> that keeps the markets you care about in one place, with their price, time left and forecast.</li>
+                  <li><b>Market news, tagged by asset,</b> so you can see which headlines touch the markets listed here.</li>
+                  <li><b>Short windows, five or fifteen minutes,</b> so a market you follow is decided quickly and you are never left waiting days for an answer.</li>
+                </ul>
+                <h3>How a market settles</h3>
+                <p>When the event ends, the market settles on the real outcome, from the source stated on the market page. A person confirms the outcome, based on the real event the question describes. The side that called it right is the winning side. The forecast never settles a market.</p>
+              </div>
+
+              <div class="doc-sec" id="doc-forecast">
+                <h2>How the forecast is worked out</h2>
+                <p>Every market carries a forecast. It is worked out from the market itself, in four plain steps. Nothing is guessed, and nothing is hidden: you can check each step against the order book yourself.</p>
+                <div class="doc-graphic">
+                  <svg class="doc-grain" aria-hidden="true"><rect width="100%" height="100%" filter="url(#docGrain)"/></svg>
+                  <div class="fc-graphic">
+                    <div class="mini-book">
+                      <div class="mb-title">LIVE ORDER BOOK</div>
+                      <div class="mb-row"><span class="bid">BID 0.62</span><span>4,120</span></div>
+                      <div class="mb-row"><span class="bid">BID 0.61</span><span>2,860</span></div>
+                      <div class="mb-row"><span class="ask">ASK 0.64</span><span>1,940</span></div>
+                      <div class="mb-row"><span class="ask">ASK 0.65</span><span>1,120</span></div>
+                    </div>
+                    <div class="fc-arrow"><svg width="26" height="16" viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 8h22M17 2l6 6-6 6"/></svg></div>
+                    <div class="mini-fc">
+                      <span class="pill">FORECAST</span>
+                      <b>Up, 62%</b>
+                      <p>Price is holding above the win line with under 4 minutes left and the spread is tight, so one trade is unlikely to flip it.</p>
+                    </div>
+                  </div>
+                </div>
+                <h3>The live price</h3>
+                <p>The forecast starts from the middle of the best bid and the best ask. A price near 50% means the market has not picked a side yet. Above 60% it leans one way, below 40% it leans the other.</p>
+                <h3>The spread</h3>
+                <p>A wide gap between the best bid and ask means the price can move further on a single trade, so the forecast says so. A tight gap means the price is firm.</p>
+                <h3>The time left</h3>
+                <p>On a market with only a few minutes left, one trade can turn the price. With hours left, there is room for the price to come back. The forecast weighs the time left on every market it reads.</p>
+                <h3>The volume</h3>
+                <p>When no trades have happened yet, the price is quotes only, not trades, and the forecast says that plainly. When volume is building, the forecast reads it as the market getting surer of itself.</p>
+                <p>The forecast is a read of the market, not a promise about the outcome. It tells you which way the market leans and why, in words you can check against the order book yourself. It never creates a market and it never decides one.</p>
+              </div>
+
+              <div class="doc-sec" id="doc-learn">
+                <h2>How the forecast learns</h2>
+                <p>The forecast does not stay fixed. Every time the page loads, it writes down the forecast it showed for each market: the chance it gave, the price, the spread, the time left and the volume. When a market ends, it checks the real outcome and scores that forecast against it. A forecast that called it right scores well. One that missed does not.</p>
+                <p>From those scored forecasts it builds a second version of the forecast, called the challenger. The challenger is only a small adjustment to the starting formula, worked out from past results. It is tested on the newest markets first, before it is allowed near the forecast you see. It only replaces the forecast you see when it beats the current one on those newer markets by a clear margin. If it does not, the forecast stays as it is, and the challenger goes back to learning.</p>
+                <div class="doc-graphic">
+                  <svg class="doc-grain" aria-hidden="true"><rect width="100%" height="100%" filter="url(#docGrain)"/></svg>
+                  <div class="loop-wrap">
+                    <svg class="loop-ring" viewBox="0 0 210 210" aria-hidden="true">
+                      <circle cx="105" cy="105" r="78" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1.5"/>
+                      <circle cx="105" cy="105" r="78" fill="none" stroke="#C8F542" stroke-width="2.5" pathLength="100" stroke-dasharray="78 22" transform="rotate(-90 105 105)" stroke-linecap="round"/>
+                      <g font-family="IBM Plex Mono, monospace" font-size="13" font-weight="700" text-anchor="middle">
+                        <circle cx="105" cy="27" r="14" fill="#111111" stroke="#C8F542" stroke-width="1.5"/><text x="105" y="32" fill="#C8F542">1</text>
+                        <circle cx="183" cy="105" r="14" fill="#111111" stroke="#C8F542" stroke-width="1.5"/><text x="183" y="110" fill="#C8F542">2</text>
+                        <circle cx="105" cy="183" r="14" fill="#111111" stroke="#C8F542" stroke-width="1.5"/><text x="105" y="188" fill="#C8F542">3</text>
+                        <circle cx="27" cy="105" r="14" fill="#111111" stroke="#C8F542" stroke-width="1.5"/><text x="27" y="110" fill="#C8F542">4</text>
+                      </g>
+                    </svg>
+                    <ol class="loop-steps">
+                      <li><span class="n">01</span><span>The forecast is shown on every market.</span></li>
+                      <li><span class="n">02</span><span>The market settles on the real outcome.</span></li>
+                      <li><span class="n">03</span><span>The forecast is scored against that outcome.</span></li>
+                      <li><span class="n">04</span><span>A better version is tested on the newest markets. If it wins, it takes over, and the loop starts again, sharper.</span></li>
+                    </ol>
+                  </div>
+                </div>
+                <p id="learnScore">Scored 0 forecasts so far. Still collecting the first samples.</p>
+                <p>The forecast learns from results only. It never creates a market and it never decides one. A person decides every outcome, based on the real event the question describes.</p>
+              </div>
+
+              <div class="doc-sec" id="doc-watch">
+                <h2>Your watchlist, price alerts and market news</h2>
+                <h3>Your watchlist</h3>
+                <p>Star any market to keep it on your watchlist. It is saved on your device, so it stays with you when you come back. The watchlist shows the price, the time left and the forecast for each market you watch, so the ones you care about are always one tap away.</p>
+                <h3>Price alerts</h3>
+                <p>The site flags a market when the price moved 5 points or more, when the gap between the best bid and ask widened sharply, or when the quote went stale. When nothing is flagged, nothing shows. Nothing is flagged by hand.</p>
+                <h3>Market news</h3>
+                <p>The news digest, under News in the menu, lists the latest crypto headlines, each with its source, its time and a link to read it. Headlines are tagged by the asset they mention, so you can see at a glance which ones touch the markets listed here. The headlines come from public news feeds and are never written here.</p>
+              </div>
+
+              <div class="doc-sec" id="doc-terms">
+                <h2>Terms and conditions</h2>
+                <ul class="terms-list">
+                  <li><b>Read the question.</b> Each market settles on the outcome stated in its question. Read the question, and the note on the market page, before you follow it.</li>
+                  <li><b>A human decides the outcome.</b> The outcome of each market is decided by a person, based on the real event the question describes.</li>
+                  <li><b>Where the numbers come from.</b> Prices, volumes and order books shown on this site come from the market's order book, read when the page loads or refreshes.</li>
+                  <li><b>Prices move.</b> A price is the market's view at a moment in time. It can move quickly, especially on short markets with little time left, and a price is never a promise about the outcome.</li>
+                  <li><b>The forecast is a read of the market, not a promise.</b> It is worked out from the price, the spread, the time left and the volume. It never decides a market.</li>
+                  <li><b>The forecast learns from past results.</b> It records the forecast it showed, scores it against the real outcome when the market ends, and only changes when past results show a better way.</li>
+                  <li><b>Trading opens soon.</b> Watching, forecasts, alerts and the watchlist are live now. Trading, deposits and withdrawals open with trading, and this page will say so when they do.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="spacer-48"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- footer -->
+    <footer>
+      <div class="wrap">
+        <div class="foot-in">
+          <a class="brand" href="#" data-nav="home">
+            <img src="logo-dark.png" width="30" height="30" alt="prognosis logo" />
+            <span class="brand-name">prognosis</span>
+          </a>
+          <span class="foot-tag">Trade the question.</span>
+          <nav class="foot-links" aria-label="Footer">
+            <button type="button" data-nav="home">Markets</button>
+            <button type="button" data-nav="news">News</button>
+            <button type="button" data-nav="docs">Documentation</button>
+          </nav>
+        </div>
+      </div>
+    </footer>
+
+    <nav class="mobile-nav" aria-label="Mobile">
+      <button type="button" data-nav="home" class="on">Markets</button>
+      <button type="button" data-nav="watchlist">Watchlist</button>
+      <button type="button" data-nav="news">News</button>
+      <button type="button" data-nav="docs">Docs</button>
+    </nav>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script>
+    "use strict";
+    /* state */
+    var S = {
+      markets: [],
+      current: null,
+      detail: null,
+      books: {},
+      flags: {},
+      watch: [],
+      lastOk: 0,
+      loadBusy: false,
+      loadFailures: 0,
+      learn: null,
+      chart: null,
+      chartFor: null,
+      chartAnimate: false,
+      chartSvgKey: null,
+      featId: null,
+      featChart: null,
+      featChartFor: null,
+      featChartAt: 0,
+      featChartAnimate: false,
+      featChartSvgKey: null,
+      prevPrices: {},
+      flashDone: {}, /* already flashed this cycle */
+      tickerLoaded: false,
+      sector: null, /* null = biggest sector */
+      query: "",
+      shown: 6, /* cards shown on the home grid before Show more */
+      homeAnimate: false
+    };
+
+    /* helpers */
+    function $(id){ return document.getElementById(id); }
+    function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+    function toast(html){
+      var t = $("toast"); t.innerHTML = html; t.classList.add("show");
+      clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove("show"); }, 3400);
+    }
+    function num(v){
+      if (v === null || v === undefined || v === "") return null;
+      var n = parseFloat(v);
+      return isFinite(n) ? n : null;
+    }
+    function fmtPct(p){
+      if (p === null || p === undefined) return "-";
+      return (p * 100).toFixed(1).replace(/\.0$/, "") + "%";
+    }
+    function fmtPct1(p){
+      if (p === null || p === undefined) return "-";
+      return (p * 100).toFixed(1) + "%";
+    }
+    function fmtPrice(p){
+      if (p === null || p === undefined) return "-";
+      return p.toFixed(2);
+    }
+    function fmtLast(p){
+      if (p === null || p === undefined || p <= 0) return "-";
+      return p.toFixed(2);
+    }
+    function fmtVol(v){
+      var n = num(v);
+      if (n === null) return "-";
+      if (n === 0) return "0";
+      return n.toLocaleString("en-US");
+    }
+    function fmtUsd(v){
+      if (v === null || v === undefined) return "-";
+      return "$" + Number(v).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    function fmtTickerPrice(v){
+      if (v === null || v === undefined) return "-";
+      if (v >= 1000) return "$" + Math.round(v).toLocaleString("en-US");
+      return "$" + Number(v).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    function fmtClock(tsSec){
+      if (!tsSec) return "-";
+      var d = new Date(Number(tsSec) * 1000);
+      if (isNaN(d.getTime())) return "-";
+      return d.toLocaleTimeString("en-GB", {hour:"2-digit", minute:"2-digit"});
+    }
+    function fmtDate(tsSec){
+      if (!tsSec) return "-";
+      var d = new Date(Number(tsSec) * 1000);
+      if (isNaN(d.getTime())) return "-";
+      return d.toLocaleDateString("en-GB", {day:"numeric", month:"short", year:"numeric"}) + " · " +
+             d.toLocaleTimeString("en-GB", {hour:"2-digit", minute:"2-digit"});
+    }
+    function timeLeft(secs){
+      if (secs <= 0) return "no time, it has closed";
+      var d = Math.floor(secs / 86400), h = Math.floor(secs % 86400 / 3600), mi = Math.floor(secs % 3600 / 60);
+      if (d >= 2) return d + " days";
+      if (d === 1) return "1 day and " + h + (h === 1 ? " hour" : " hours");
+      if (h >= 1) return h + (h === 1 ? " hour" : " hours") + " and " + mi + (mi === 1 ? " minute" : " minutes");
+      if (mi >= 1) return mi + (mi === 1 ? " minute" : " minutes");
+      return "under a minute";
+    }
+    function countdownText(diff){
+      if (diff <= 0) return "CLOSED · AWAITING RESOLUTION";
+      var d = Math.floor(diff / 86400), h = Math.floor(diff % 86400 / 3600), mi = Math.floor(diff % 3600 / 60), s = diff % 60;
+      return "CLOSES IN " + (d > 0 ? d + "d " : "") + h + "h " + mi + "m " + s + "s";
+    }
+    /* flash green/red on change, once per load cycle. */
+    function flashPrice(el, oldP, newP, key){
+      if (!el || oldP === null || oldP === undefined || newP === null || newP === undefined || oldP === newP) return;
+      if (key && S.flashDone[key]) return;
+      el.classList.remove("tick-up", "tick-down");
+      void el.offsetWidth;
+      el.classList.add(newP > oldP ? "tick-up" : "tick-down");
+      if (key) S.flashDone[key] = true;
+    }
+    function flashClass(oldP, newP, key){
+      if (oldP === null || oldP === undefined || newP === null || newP === undefined || oldP === newP) return "";
+      if (key && S.flashDone[key]) return "";
+      if (key) S.flashDone[key] = true;
+      return newP > oldP ? " tick-up" : " tick-down";
+    }
+
+    /* api */
+    function api(path){
+      return fetch(path, {headers: {"Accept": "application/json"}}).then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function(j){
+        if (!j || j.error) throw new Error((j && j.error) || "Bad response");
+        return j;
+      });
+    }
+
+    /* market model */
+    var GENERIC_TAGS = {recurring:1, "up-or-down":1, "hide-from-new":1, "5m":1, "15m":1, "1h":1, "4h":1, "1d":1, crypto:1, "crypto-prices":1};
+    function groupOf(m){
+      var tags = m.tags || [];
+      for (var i = 0; i < tags.length; i++){
+        var slug = (tags[i].slug || "").toLowerCase();
+        if (!slug || GENERIC_TAGS[slug]) continue;
+        var label = tags[i].label && tags[i].label.en ? tags[i].label.en : tags[i].slug;
+        return label.charAt(0).toUpperCase() + label.slice(1);
+      }
+      return "More markets";
+    }
+    function windowOf(m){
+      var tags = m.tags || [];
+      for (var i = 0; i < tags.length; i++){
+        var slug = (tags[i].slug || "").toUpperCase();
+        if (/^\d+[MH D]$/.test(slug) || slug === "5M" || slug === "15M" || slug === "1H" || slug === "4H" || slug === "1D") return slug;
+      }
+      return "-";
+    }
+    var ASSET_SLUGS = {bitcoin:"BTC", btc:"BTC", ethereum:"ETH", eth:"ETH", ether:"ETH", xrp:"XRP", ripple:"XRP", solana:"SOL", sol:"SOL", dogecoin:"DOGE", doge:"DOGE", bnb:"BNB", binance:"BNB", hyperliquid:"HYPE", hype:"HYPE", zcash:"ZEC", zec:"ZEC"};
+    var ASSET_LABELS = {BTC:"Bitcoin", ETH:"Ethereum", XRP:"XRP", SOL:"Solana", DOGE:"Dogecoin", BNB:"BNB", HYPE:"Hyperliquid", ZEC:"ZCash"};
+    /* muted accent per asset: sector tab dot and card dot. */
+    var SECTOR_COLORS = {BTC:"#B08A00", ETH:"#5E548E", XRP:"#2F6690", SOL:"#3D7A5E", DOGE:"#A9713F", BNB:"#7A7D2B", HYPE:"#9C5B7A", ZEC:"#5F7A8A"};
+    function sectorColor(key){ return SECTOR_COLORS[key] || "#6E6A61"; }
+    function assetOf(m){
+      var tags = m.tags || [];
+      for (var i = 0; i < tags.length; i++){
+        var s = (tags[i].slug || "").toLowerCase();
+        if (ASSET_SLUGS[s]) return ASSET_SLUGS[s];
+      }
+      var q = (m.question || "").toLowerCase();
+      var names = [["bitcoin","BTC"],["ethereum","ETH"],["ether","ETH"],["xrp","XRP"],["ripple","XRP"],["solana","SOL"],["dogecoin","DOGE"],["doge","DOGE"],["bnb","BNB"],["hyperliquid","HYPE"],["zcash","ZEC"]];
+      for (var j = 0; j < names.length; j++){
+        if (q.indexOf(names[j][0]) !== -1) return names[j][1];
+      }
+      return null;
+    }
+    /* sectors come from the live data, nothing hardcoded, so a new asset gets its own sector. */
+    function sectorOf(m){
+      var a = assetOf(m);
+      if (a) return {key: a, label: ASSET_LABELS[a] || a};
+      var g = groupOf(m);
+      return {key: "g:" + g, label: g};
+    }
+    function sectorCounts(){
+      var c = {};
+      S.markets.forEach(function(m){
+        var s = sectorOf(m);
+        if (!c[s.key]) c[s.key] = {key: s.key, label: s.label, n: 0};
+        c[s.key].n++;
+      });
+      var list = Object.keys(c).map(function(k){ return c[k]; });
+      list.sort(function(a, b){ return b.n - a.n || (a.label < b.label ? -1 : 1); });
+      return list;
+    }
+    /* sector filter, then search. search spans all sectors; the sector menu only filters when nothing is being searched. */
+    function visibleMarkets(){
+      var list = S.markets;
+      if (!S.query && S.sector && S.sector !== "all"){
+        list = list.filter(function(m){ return sectorOf(m).key === S.sector; });
+      }
+      if (S.query){
+        var q = S.query;
+        list = list.filter(function(m){
+          var a = assetOf(m);
+          var hay = ((a ? (ASSET_LABELS[a] || a) + " " + a + " " : "") + (m.question || "")).toLowerCase();
+          return hay.indexOf(q) !== -1;
+        });
+      }
+      return list;
+    }
+    function windowSecs(m){
+      var w = windowOf(m);
+      if (w === "5M") return 300;
+      if (w === "15M") return 900;
+      if (w === "1H") return 3600;
+      if (w === "4H") return 14400;
+      if (w === "1D") return 86400;
+      return 300;
+    }
+    function normMarket(raw){
+      var q = raw.question && raw.question.en ? raw.question.en : (raw.question || "");
+      var outs = (raw.outcomes || []).map(function(o){
+        return {label: (o.outcome && o.outcome.en) ? o.outcome.en : "Outcome", tokenId: o.token_id || ""};
+      });
+      while (outs.length < 2) outs.push({label: outs.length === 0 ? "Yes" : "No", tokenId: ""});
+      var bid = num(raw.best_bid), ask = num(raw.best_ask), last = num(raw.last_trade_price);
+      var p0 = null;
+      if (bid !== null && ask !== null) p0 = (bid + ask) / 2;
+      else if (bid !== null) p0 = bid;
+      else if (ask !== null) p0 = ask;
+      else if (last !== null && last > 0) p0 = last;
+      return {
+        id: raw.market_id || "",
+        question: String(q).slice(0, 300),
+        status: raw.status || "",
+        closed: !!raw.closed,
+        start: Number(raw.start_date) || 0,
+        end: Number(raw.end_date) || 0,
+        volume: raw.volume,
+        vol24: raw.volume_24hr,
+        last: last,
+        bid: bid, ask: ask,
+        p0: p0,
+        p1: p0 === null ? null : 1 - p0,
+        outcomes: outs.slice(0, 2),
+        tags: raw.tags || [],
+        desc: raw.description && raw.description.en ? raw.description.en : "",
+        source: raw.resolution_source || "",
+        winOutcome: raw.winning_outcome || "",
+        resolvedAt: raw.resolved_at || null
+      };
+    }
+    function statusOf(m){
+      var now = Math.floor(Date.now() / 1000);
+      if (m.winOutcome) return {key:"resolved", label:"RESOLVED · " + m.winOutcome.toUpperCase()};
+      if (m.closed || (m.end && now >= m.end)) return {key:"closed", label:"CLOSED · AWAITING RESOLUTION"};
+      return {key:"open", label:"OPEN"};
+    }
+    function featuredMarket(){
+      var open = S.markets.filter(function(m){ return statusOf(m).key === "open"; });
+      if (S.sector && S.sector !== "all"){
+        var inSector = open.filter(function(m){ return sectorOf(m).key === S.sector; });
+        if (inSector.length) open = inSector;
+      }
+      var pool = open.length ? open : S.markets;
+      if (!pool.length) return null;
+      /* featured needs a price, or it would show blanks. */
+      var priced = pool.filter(function(m){ return m.p0 !== null; });
+      var pick = priced.length ? priced : pool;
+      pick.sort(function(a, b){ return (a.end || 0) - (b.end || 0); });
+      return pick[0];
+    }
+
+    /* forecast */
+    /* price is the middle of best bid and ask, plus spread, time left and 24h volume. no price, no forecast. challenger weights apply once promoted. */
+    function calibratedP(m){
+      if (!S.learn || S.learn.champion !== "learned" || !S.learn.weights) return null;
+      var w = S.learn.weights;
+      if (!w.b || !w.mu || !w.sd) return null;
+      var p = m.p0;
+      if (p === null || p === undefined) return null;
+      p = Math.min(0.99, Math.max(0.01, p));
+      var lp = Math.log(p / (1 - p));
+      var now = Math.floor(Date.now() / 1000);
+      var mins = m.end ? Math.max(0, Math.round((m.end - now) / 60)) : 0;
+      var vol = num(m.vol24) || 0;
+      var spread = (m.bid !== null && m.ask !== null) ? m.ask - m.bid : 0;
+      function z(v, mu, sd){ return sd > 0 ? (v - mu) / sd : 0; }
+      var x = w.b[0] + w.b[1] * lp +
+        w.b[2] * z(Math.log(mins + 1), w.mu.logmins, w.sd.logmins) +
+        w.b[3] * z(Math.log(vol + 1), w.mu.logvol, w.sd.logvol) +
+        w.b[4] * z(spread, w.mu.spread, w.sd.spread);
+      var q = 1 / (1 + Math.exp(-x));
+      return Math.min(0.99, Math.max(0.01, q));
+    }
+    function forecastFor(m){
+      var p = m.p0;
+      if (p === null || p === undefined) return null;
+      var now = Math.floor(Date.now() / 1000);
+      var minsLeft = m.end ? Math.max(0, Math.round((m.end - now) / 60)) : null;
+      var spread = (m.bid !== null && m.ask !== null) ? m.ask - m.bid : null;
+      var vol24 = num(m.vol24);
+      var l0 = m.outcomes[0].label, l1 = m.outcomes[1].label;
+      var adj = calibratedP(m);
+      var fp = adj !== null ? adj : p;
+      var verdict, lean = null;
+      if (fp >= 0.60){ verdict = "Leaning " + l0; lean = l0; }
+      else if (fp <= 0.40){ verdict = "Leaning " + l1; lean = l1; }
+      else verdict = "About even";
+      var bits = [];
+      if (adj !== null) bits.push("the market prices " + l0 + " at " + fmtPct(p) + ", but past results point to " + fmtPct(fp));
+      else if (fp >= 0.48 && fp <= 0.52) bits.push("the price sits near 50%, so the market has not picked a side yet");
+      else bits.push("the price sits at " + fmtPct(fp) + " for " + l0);
+      if (minsLeft !== null){
+        if (minsLeft <= 0) bits.push("time is up, the market has closed");
+        else if (minsLeft < 5) bits.push("with under 5 minutes left, one trade can decide it");
+        else if (minsLeft < 60) bits.push("with about " + minsLeft + " minutes left");
+        else {
+          var hrs = Math.round(minsLeft / 60);
+          bits.push("with about " + hrs + (hrs === 1 ? " hour" : " hours") + " left");
+        }
+      }
+      if (spread !== null && spread >= 0.06) bits.push("the gap between the best bid and ask is wide, so the price can move fast");
+      else if (spread !== null && spread <= 0.03) bits.push("the book is tight, so the price is firm");
+      if (vol24 === null || vol24 === 0) bits.push("no trades in the last day, so the price is quotes only");
+      else bits.push(fmtVol(vol24) + " traded in the last day");
+      var reason = bits.join(", ");
+      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
+      var basis = "Price " + fmtPrice(p) + " · spread " + (spread === null ? "-" : spread.toFixed(2)) + " · " +
+        (minsLeft === null ? "time left -" : (minsLeft > 0 ? timeLeft(m.end - now) + " left" : "closed")) +
+        " · volume in the last day " + fmtVol(vol24);
+      return {verdict: verdict, reason: reason, basis: basis, p: fp, pRaw: p, learned: adj !== null, lean: lean};
+    }
+
+    /* load */
+    var retryTimer = null;
+    function loadMarkets(){
+      if (S.loadBusy) return Promise.resolve();
+      S.loadBusy = true;
+      return api("api.php?action=markets&limit=100").then(function(j){
+        var items = (j && j.items) || [];
+        var prev = {};
+        S.markets.forEach(function(m){ prev[m.id] = {p0: m.p0, p1: m.p1}; });
+        S.prevPrices = prev;
+        S.flashDone = {};
+        S.markets = items.map(normMarket).filter(function(m){ return m.id && m.question; });
+        S.loadBusy = false;
+        S.loadFailures = 0;
+        if (retryTimer){ clearTimeout(retryTimer); retryTimer = null; }
+        S.lastOk = Date.now();
+        $("homeError").style.display = "none";
+        renderHome();
+        if (S.current) renderMarket();
+        loadWatchdog();
+        loadLearning();
+        loadTicker();
+        recordForecasts();
+        if (S.current && $("view-market").classList.contains("on")) loadChart(S.current);
+        if ($("view-watchlist").classList.contains("on")) renderWatchlist();
+      }).catch(function(e){
+        S.loadBusy = false;
+        S.loadFailures++;
+        if (!S.markets.length){
+          $("homeError").style.display = "block";
+          $("featQ").textContent = "Markets could not be loaded";
+          $("featStatus").textContent = "UNAVAILABLE";
+          $("marketGrid").innerHTML = "";
+        } else {
+          toast("<b>Could not refresh prices.</b> Showing the last good read.");
+        }
+        if (retryTimer) clearTimeout(retryTimer);
+        retryTimer = setTimeout(function(){ retryTimer = null; loadMarkets(); }, Math.min(5000 * S.loadFailures, 30000));
+      });
+    }
+    function loadDetail(id){
+      var m = S.markets.find(function(x){ return x.id === id; });
+      if (!m) return Promise.resolve();
+      return api("api.php?action=market&id=" + encodeURIComponent(id)).then(function(j){
+        S.detail = normMarket(j);
+        var i = S.markets.findIndex(function(x){ return x.id === id; });
+        if (i >= 0) S.markets[i] = S.detail;
+        var t0 = S.detail.outcomes[0] && S.detail.outcomes[0].tokenId;
+        var t1 = S.detail.outcomes[1] && S.detail.outcomes[1].tokenId;
+        var calls = [];
+        if (t0) calls.push(api("api.php?action=book&token_id=" + encodeURIComponent(t0) + "&depth=10").then(function(b){ S.books[t0] = b; }, function(){ S.books[t0] = null; }));
+        if (t1) calls.push(api("api.php?action=book&token_id=" + encodeURIComponent(t1) + "&depth=10").then(function(b){ S.books[t1] = b; }, function(){ S.books[t1] = null; }));
+        return Promise.all(calls);
+      }).catch(function(){
+        /* detail failed: keep the list data, books stay empty */
+        S.detail = m;
+      }).then(function(){ loadChart(id); renderMarket(); });
+    }
+
+    /* price alerts */
+    function loadWatchdog(){
+      return fetch("api.php?action=watchdog", {headers: {"Accept": "application/json"}}).then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function(j){
+        S.flags = {};
+        var flags = (j && j.flags) || [];
+        flags.forEach(function(f){ S.flags[f.market_id] = f; });
+        renderWatchdog(flags, j);
+        /* re-render so the flag chips match the latest flags. */
+        if ($("view-home").classList.contains("on")) renderHome();
+        if ($("view-watchlist").classList.contains("on")) renderWatchlist();
+      }).catch(function(){
+        var sec = $("watchdogSection");
+        if (sec) sec.style.display = "none";
+      });
+    }
+    /* no flags, no section at all. */
+    function renderWatchdog(flags, j){
+      var sec = $("watchdogSection");
+      var box = $("watchdogBox");
+      if (!flags.length){
+        if (sec) sec.style.display = "none";
+        return;
+      }
+      if (sec) sec.style.display = "";
+      var html = '<div class="alert-list">';
+      flags.forEach(function(f){
+        var kind = f.kind === "move" ? "PRICE MOVED" : f.kind === "spread" ? "SPREAD WIDENED" : "QUOTE WENT STALE";
+        html += '<div class="alert-item"><div class="ak">' + esc(kind) + '</div>' +
+          '<p class="aq">' + esc(f.question) + '</p><p class="ar">' + esc(f.text) + '</p></div>';
+      });
+      box.innerHTML = html + '</div>';
+    }
+
+    /* news */
+    function loadNews(){
+      return fetch("api.php?action=news", {headers: {"Accept": "application/json"}}).then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function(j){
+        if (!j || j.error || !j.items) throw new Error((j && j.error) || "Bad response");
+        renderNews(j);
+      }).catch(function(){
+        $("newsBox").innerHTML = '<div class="quiet">Market news is unavailable right now. The news feeds could not be reached.</div>';
+      });
+    }
+    function fmtNewsTime(iso){
+      if (!iso) return "";
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return "";
+      return d.toLocaleDateString("en-GB", {day:"numeric", month:"short"}) + " · " +
+             d.toLocaleTimeString("en-GB", {hour:"2-digit", minute:"2-digit"});
+    }
+    function renderNews(j){
+      var box = $("newsBox");
+      var html = "";
+      if (j.mood && j.mood.scanned){
+        var pos = j.mood.positive, neg = j.mood.negative;
+        html += '<p class="mood-line">Market mood: ' + j.mood.scanned + ' stories scanned in the last hour' +
+          (pos !== null && pos !== undefined ? ', ' + pos + ' read as positive' : '') +
+          (neg !== null && neg !== undefined ? ', ' + neg + ' read as negative' : '') + '.</p>';
+      }
+      var items = [];
+      j.items.forEach(function(it){
+        /* only http/https links ever reach an anchor. the server drops the rest too; this is the second check. */
+        if (!it.link || !/^https?:\/\//.test(it.link)) return;
+        items.push(it);
+      });
+      if (items.length){
+        var first = items[0];
+        var ftags = (first.tags || []).map(function(t){ return '<span class="news-tag">' + esc(t) + '</span>'; }).join("");
+        html += '<div class="news-feature"><p class="news-kicker">TOP STORY</p><a href="' + esc(first.link) + '" target="_blank" rel="noopener noreferrer">' + esc(first.title) + '</a>' +
+          '<div class="news-meta"><span>' + esc(first.source || "News") + '</span><span>' + esc(fmtNewsTime(first.time)) + '</span>' + ftags + '</div></div>';
+      }
+      html += '<div class="news-list">';
+      items.slice(1).forEach(function(it){
+        var tags = (it.tags || []).map(function(t){ return '<span class="news-tag">' + esc(t) + '</span>'; }).join("");
+        html += '<div class="news-item"><div><a href="' + esc(it.link) + '" target="_blank" rel="noopener noreferrer">' + esc(it.title) + '</a>' +
+          '<div class="news-meta"><span>' + esc(it.source || "News") + '</span><span>' + esc(fmtNewsTime(it.time)) + '</span>' + tags + '</div></div></div>';
+      });
+      box.innerHTML = html + '</div>';
+    }
+
+    /* chart */
+    /* old chart stays up while new data loads, and the svg updates in place. never blanks after first load; a failed fetch leaves it alone. */
+    function loadChart(id){
+      S.chartFor = id;
+      return fetch("api.php?action=chart&market_id=" + encodeURIComponent(id), {headers: {"Accept": "application/json"}}).then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function(j){
+        if (S.chartFor !== id) return;
+        if (j && j.available === false && S.chart && S.chart.available && S.chart.market_id === id){
+          renderChart();
+          return;
+        }
+        S.chart = j;
+        renderChart();
+        if (S.current === id && $("view-market").classList.contains("on")) renderMarket();
+      }).catch(function(){
+        if (S.chartFor !== id) return;
+        if (!S.chart || S.chart.market_id !== id){
+          S.chart = {available: false, reason: "price_feed_unavailable", market_id: id};
+          renderChart();
+        }
+      });
+    }
+    /* price line over the window, soft fill, dashed win line at the window-start price. fill green above the line, red below, neutral until the line is set. inline svg, no library. opts: panel, mini, animate. */
+    /* TODO: the win line has not been seen on a live market yet, no listed window has started. check it shows once one does. */
+    /* same geometry for the full build and the in-place update, so both draw the same picture. */
+    function chartGeom(c, opts){
+      opts = opts || {};
+      var pts = c.points || [];
+      var mini = !!opts.mini;
+      var panel = opts.panel || document.querySelector('#chartPanel');
+      var compact = mini;
+      if (!mini && panel && panel.clientWidth && panel.clientWidth < 520) compact = true;
+      var W, H, PL, PR, PT, PB, FS;
+      if (mini){ W = 440; H = 150; PL = 10; PR = 10; PT = 12; PB = 10; FS = 11; }
+      else if (compact){ W = 440; H = 220; PL = 52; PR = 12; PT = 18; PB = 26; FS = 13; }
+      else { W = 640; H = 240; PL = 54; PR = 14; PT = 16; PB = 28; FS = 11; }
+      var ys = pts.map(function(p){ return p[1]; });
+      var line = (c.line !== null && c.line !== undefined) ? c.line : null;
+      if (line !== null) ys.push(line);
+      var lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
+      var pad = (hi - lo) * 0.08;
+      if (!(pad > 0)) pad = hi * 0.001 || 1;
+      lo -= pad; hi += pad;
+      var t0 = c.started ? c.win_start : pts[0][0];
+      var t1 = c.started ? c.win_end : pts[pts.length - 1][0];
+      if (t1 <= t0) t1 = t0 + 60;
+      function X(t){ return PL + (t - t0) / (t1 - t0) * (W - PL - PR); }
+      function Y(v){ return PT + (1 - (v - lo) / (hi - lo)) * (H - PT - PB); }
+      var baseY = H - PB;
+      var area = "", lineD = "", fill = "rgba(17,17,17,0.05)";
+      if (pts.length > 1){
+        area = pts.map(function(p, i){ return (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1); }).join(" ");
+        area += " L" + X(pts[pts.length - 1][0]).toFixed(1) + " " + baseY + " L" + X(pts[0][0]).toFixed(1) + " " + baseY + " Z";
+        if (line !== null && c.average !== null && c.average !== undefined){
+          fill = c.average >= line ? "rgba(30,125,50,0.15)" : "rgba(198,40,40,0.15)";
+        }
+        lineD = pts.map(function(p, i){ return (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1); }).join(" ");
+      }
+      var dot = pts.length ? {x: X(pts[pts.length - 1][0]), y: Y(pts[pts.length - 1][1])} : null;
+      var single = pts.length === 1 ? {x: X(pts[0][0]), y: Y(pts[0][1])} : null;
+      return {
+        W: W, H: H, PL: PL, PR: PR, PT: PT, PB: PB, FS: FS,
+        mini: mini, lo: lo, hi: hi, pad: pad, t0: t0, t1: t1,
+        area: area, lineD: lineD, fill: fill, line: line,
+        winY: line !== null ? Y(line) : null,
+        dot: dot, single: single, pts: pts.length
+      };
+    }
+    function chartSVG(c, opts){
+      opts = opts || {};
+      var g = chartGeom(c, opts);
+      var anim = !!opts.animate;
+      var fadeCls = anim ? ' class="chart-fade"' : '';
+      var html = '<svg class="chart-svg" data-market="' + esc(String(c.market_id)) + '" viewBox="0 0 ' + g.W + ' ' + g.H + '" role="img" aria-label="Price chart for the market window">';
+      if (g.pts > 1){
+        html += '<path class="chart-area" d="' + g.area + '" fill="' + g.fill + '"' + fadeCls + '/>';
+      }
+      if (g.line !== null){
+        html += '<g class="chart-win"' + fadeCls + '><line class="chart-winline" x1="' + g.PL + '" y1="' + g.winY.toFixed(1) + '" x2="' + (g.W - g.PR) + '" y2="' + g.winY.toFixed(1) + '" stroke="#111111" stroke-width="1.5" stroke-dasharray="6 4"/>';
+        html += '<text class="chart-wintext" x="' + (g.W - g.PR) + '" y="' + Math.max(12, g.winY - 6).toFixed(1) + '" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="' + g.FS + '" fill="#111111">Win line ' + fmtUsd(g.line) + '</text></g>';
+      }
+      if (g.pts > 1){
+        html += '<path class="chart-price' + (anim ? ' chart-line' : '') + '" d="' + g.lineD + '" fill="none" stroke="#111111" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"' + (anim ? ' pathLength="100"' : '') + '/>';
+      }
+      if (!g.mini){
+        html += '<text class="chart-hi" x="' + g.PL + '" y="12" font-family="ui-monospace,Menlo,monospace" font-size="' + g.FS + '" fill="#6E6A61">' + fmtUsd(g.hi - g.pad) + '</text>';
+        html += '<text class="chart-lo" x="' + g.PL + '" y="' + (g.H - g.PB - 4) + '" font-family="ui-monospace,Menlo,monospace" font-size="' + g.FS + '" fill="#6E6A61">' + fmtUsd(g.lo + g.pad) + '</text>';
+        html += '<text class="chart-t0" x="' + g.PL + '" y="' + (g.H - 6) + '" font-family="ui-monospace,Menlo,monospace" font-size="' + g.FS + '" fill="#6E6A61">' + fmtClock(g.t0) + '</text>';
+        html += '<text class="chart-t1" x="' + (g.W - g.PR) + '" y="' + (g.H - 6) + '" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="' + g.FS + '" fill="#6E6A61">' + fmtClock(g.t1) + '</text>';
+      }
+      html += '</svg>';
+      return html;
+    }
+    /* move the line, fill, win line, dot and labels inside the existing svg. returns false when it has to be rebuilt. */
+    function updateChartSVG(c, opts){
+      var box = $("chartBox");
+      if (!box) return false;
+      var svg = box.querySelector("svg.chart-svg");
+      if (!svg) return false;
+      if (svg.dataset.market !== String(c.market_id)) return false;
+      var g = chartGeom(c, opts);
+      if (svg.getAttribute("viewBox") !== "0 0 " + g.W + " " + g.H) return false;
+      var area = svg.querySelector(".chart-area");
+      var price = svg.querySelector(".chart-price");
+      var dot = svg.querySelector(".chart-dot");
+      var win = svg.querySelector(".chart-win");
+      if (g.pts > 1){
+        if (!area || !price) return false;
+        area.setAttribute("d", g.area);
+        area.setAttribute("fill", g.fill);
+        price.setAttribute("d", g.lineD);
+        if (dot){ dot.setAttribute("cx", g.dot.x.toFixed(1)); dot.setAttribute("cy", g.dot.y.toFixed(1)); }
+      } else {
+        return false;
+      }
+      if (g.line !== null){
+        if (!win) return false;
+        win.style.display = "";
+        var wl = win.querySelector(".chart-winline");
+        var wt = win.querySelector(".chart-wintext");
+        wl.setAttribute("y1", g.winY.toFixed(1));
+        wl.setAttribute("y2", g.winY.toFixed(1));
+        wt.setAttribute("y", Math.max(12, g.winY - 6).toFixed(1));
+        wt.textContent = "Win line " + fmtUsd(g.line);
+      } else if (win){
+        win.style.display = "none";
+      }
+      if (!g.mini){
+        var hi = svg.querySelector(".chart-hi"), lo = svg.querySelector(".chart-lo"),
+            t0 = svg.querySelector(".chart-t0"), t1 = svg.querySelector(".chart-t1");
+        if (hi) hi.textContent = fmtUsd(g.hi - g.pad);
+        if (lo) lo.textContent = fmtUsd(g.lo + g.pad);
+        if (t0) t0.textContent = fmtClock(g.t0);
+        if (t1) t1.textContent = fmtClock(g.t1);
+      }
+      return true;
+    }
+    function renderChart(){
+      var note = $("chartNote"), box = $("chartBox"), kv = $("chartKv");
+      if (!note || !box) return;
+      var c = S.chart;
+      var m = cur();
+      if (!c){
+        note.textContent = "Loading the chart…";
+        box.innerHTML = "";
+        kv.style.display = "none";
+        return;
+      }
+      if (!c.available){
+        note.textContent = c.reason === "no_price_feed"
+          ? "The chart is unavailable for this market. There is no price feed for its asset."
+          : "The chart is unavailable right now. The price feed could not be reached.";
+        if (!box.querySelector("svg.chart-svg")) box.innerHTML = "";
+        kv.style.display = "none";
+        return;
+      }
+      var pts = c.points || [];
+      if (!pts.length){
+        note.textContent = "The chart is unavailable right now. No prices came back for this window.";
+        if (!box.querySelector("svg.chart-svg")) box.innerHTML = "";
+        kv.style.display = "none";
+        return;
+      }
+      var l0 = m ? m.outcomes[0].label : "Up";
+      var l1 = m ? m.outcomes[1].label : "Down";
+      var line = (c.line !== null && c.line !== undefined) ? c.line : null;
+      var ahead = (line !== null) ? (c.average >= line ? l0 : l1) : null;
+      var text = "";
+      if (!c.started){
+        var waitSecs = c.win_start - Math.floor(Date.now() / 1000);
+        var waitTxt;
+        if (waitSecs < 3600){ var mm = Math.max(1, Math.round(waitSecs / 60)); waitTxt = "about " + mm + (mm === 1 ? " minute" : " minutes"); }
+        else if (waitSecs < 172800){ var hh = Math.round(waitSecs / 3600); waitTxt = "about " + hh + (hh === 1 ? " hour" : " hours"); }
+        else { var dd = Math.round(waitSecs / 86400); waitTxt = "about " + dd + (dd === 1 ? " day" : " days"); }
+        text = "The window starts in " + waitTxt + ". The win line is the price when the window starts, so it is not set yet. This is the price over the last hour.";
+      } else if (line !== null){
+        text = "The dashed line is the price when the window started, " + fmtUsd(line) +
+          (c.line_source === "earliest" ? " (the earliest price available)" : "") +
+          ". " + l0 + " wins if the average price over the window ends above this line, " + l1 + " wins if it ends below it.";
+        if (c.ended){
+          var dp = (c.average - line) / line * 100;
+          text += " The window has ended. The average price over the window was " + fmtUsd(c.average) + ", " + Math.abs(dp).toFixed(1) + "% " + (dp >= 0 ? "above" : "below") + " the line, so " + ahead + " was ahead at the end.";
+        } else {
+          var pct = (c.current - line) / line * 100;
+          text += " The price now is " + fmtUsd(c.current) + ", " + Math.abs(pct).toFixed(1) + "% " + (pct >= 0 ? "above" : "below") + " the line. The average so far is " + fmtUsd(c.average) + ", so " + ahead + " is ahead right now.";
+        }
+      }
+      note.textContent = text;
+      /* only rebuild when the data actually changed, otherwise update in place. the note and key values still update every time. */
+      var chartKey = c.market_id + "|" + (c.fetched_at || "");
+      if (S.chartSvgKey !== chartKey){
+        if (!updateChartSVG(c, {panel: $("chartPanel")})){
+          box.innerHTML = chartSVG(c, {panel: $("chartPanel"), animate: S.chartAnimate});
+        }
+        S.chartSvgKey = chartKey;
+      }
+      S.chartAnimate = false;
+      var kvHtml = "<span>PRICE NOW <b>" + fmtUsd(c.current) + "</b></span>" +
+        "<span>" + (c.ended ? "AVERAGE OVER THE WINDOW" : "AVERAGE SO FAR") + " <b>" + fmtUsd(c.average) + "</b></span>";
+      if (line !== null) kvHtml += "<span>WIN LINE <b>" + fmtUsd(line) + "</b></span>";
+      else kvHtml += "<span>WIN LINE <b>NOT SET YET</b></span>";
+      var vals = pts.map(function(p){ return p[1]; });
+      var op = vals[0], hp = Math.max.apply(null, vals), lp = Math.min.apply(null, vals);
+      kvHtml += "<span>OPEN <b>" + fmtUsd(op) + "</b></span><span>HIGH <b>" + fmtUsd(hp) + "</b></span><span>LOW <b>" + fmtUsd(lp) + "</b></span>";
+      if (line !== null && line > 0){
+        var dd = (c.current - line) / line * 100;
+        kvHtml += "<span>DISTANCE <b>" + (dd >= 0 ? "+" : "") + dd.toFixed(2) + "%</b></span>";
+      }
+      kv.innerHTML = kvHtml;
+      kv.style.display = "";
+    }
+    /* trend over the window and distance from the win line, real data only. */
+    function chartForecastBits(m){
+      var c = S.chart;
+      if (!c || !c.available || c.market_id !== m.id || !c.points || !c.points.length) return null;
+      var first = c.points[0][1], last = c.points[c.points.length - 1][1];
+      var chg = first > 0 ? (last - first) / first * 100 : 0;
+      var trend = Math.abs(chg) < 0.05 ? "barely moved" : (chg > 0 ? "risen" : "fallen");
+      var l0 = m.outcomes[0].label;
+      if (!c.started){
+        return "The window has not started yet. Over the last hour the price has " + trend + ".";
+      }
+      var line = (c.line !== null && c.line !== undefined) ? c.line : null;
+      if (line === null || line <= 0) return "Over the window so far the price has " + trend + ".";
+      var ahead = c.average >= line ? l0 : m.outcomes[1].label;
+      if (c.ended){
+        var dp = (c.average - line) / line * 100;
+        return "Over the window the price " + trend + ", and the average ended " + Math.abs(dp).toFixed(1) + "% " + (dp >= 0 ? "above" : "below") + " the line " + l0 + " needs to win.";
+      }
+      var d = (c.current - line) / line * 100;
+      return "Over the window so far the price has " + trend + ", and it sits " + Math.abs(d).toFixed(1) + "% " + (d >= 0 ? "above" : "below") + " the line " + l0 + " needs to win. On the average so far, " + ahead + " is ahead right now.";
+    }
+
+    /* same drawing, smaller, no axis labels. only shows when the feed answers. */
+    function loadFeatChart(id){
+      S.featChartFor = id;
+      S.featChartAt = Date.now();
+      return fetch("api.php?action=chart&market_id=" + encodeURIComponent(id), {headers: {"Accept": "application/json"}}).then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function(j){
+        if (S.featChartFor !== id) return;
+        S.featChart = j;
+        renderFeatChart();
+      }).catch(function(){
+        if (S.featChartFor !== id) return;
+        S.featChart = {available: false};
+        renderFeatChart();
+      });
+    }
+    function renderFeatChart(){
+      var box = $("featChart");
+      if (!box) return;
+      var c = S.featChart;
+      if (!c){
+        box.style.display = "";
+        box.innerHTML = '<p class="chart-note" style="margin:0">Loading the chart…</p>';
+        return;
+      }
+      if (!c.available || !c.points || !c.points.length){
+        box.innerHTML = "";
+        box.style.display = "none";
+        S.featChartSvgKey = null;
+        return;
+      }
+      var key = c.market_id + "|" + (c.fetched_at || "");
+      if (S.featChartSvgKey !== key){
+        box.style.display = "";
+        box.innerHTML = chartSVG(c, {panel: box, mini: true, animate: S.featChartAnimate});
+        S.featChartSvgKey = key;
+      }
+      S.featChartAnimate = false;
+      var wlEl = $("featWinLine");
+      if (wlEl && c.line !== null && c.line !== undefined) wlEl.textContent = fmtUsd(c.line);
+    }
+
+    /* ticker */
+    /* price and 24h move for the eight assets, green up red down, refreshes every 30s. keeps the last good read; hidden until it ever loads. */
+    function loadTicker(){
+      return fetch("api.php?action=ticker", {headers: {"Accept": "application/json"}}).then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function(j){
+        if (!j || j.error || !j.assets || !j.assets.length) throw new Error("Bad response");
+        renderTicker(j.assets);
+        S.tickerLoaded = true;
+      }).catch(function(){
+      });
+    }
+    /* eight assets twice, so the strip can move back and forth. prices update in place, so the motion never restarts on refresh. */
+    function tickerItemHTML(a){
+      var chg = (a.chg24 === null || a.chg24 === undefined) ? "" :
+        '<span class="' + (a.chg24 >= 0 ? "chg-up" : "chg-down") + '">' + (a.chg24 >= 0 ? "+" : "") + (a.chg24 * 100).toFixed(1) + "%</span>";
+      return '<span class="sym">' + esc(a.asset) + '</span><span class="pr">' + fmtTickerPrice(a.price) + '</span>' + chg;
+    }
+    /* only moves when the doubled track is wider than the strip. */
+    function fitTicker(){
+      var strip = $("ticker"), box = $("tickerIn"), track = $("tickerTrack");
+      if (!strip || !box || !track) return;
+      strip.classList.toggle("anim", track.scrollWidth > box.clientWidth + 4);
+    }
+    function renderTicker(assets){
+      var strip = $("ticker"), box = $("tickerIn");
+      if (!strip || !box) return;
+      var key = assets.map(function(a){ return a.asset; }).join(",");
+      var track = $("tickerTrack");
+      if (track && track.dataset.assets === key){
+        assets.forEach(function(a){
+          var items = track.querySelectorAll('[data-asset="' + a.asset + '"]');
+          for (var i = 0; i < items.length; i++){
+            items[i].innerHTML = tickerItemHTML(a);
+          }
+        });
+        strip.style.display = "";
+        fitTicker();
+        return;
+      }
+      var html = "";
+      assets.forEach(function(a){
+        html += '<span class="ticker-item" data-asset="' + esc(a.asset) + '">' + tickerItemHTML(a) + '</span>';
+      });
+      box.innerHTML = '<div class="ticker-track" id="tickerTrack" data-assets="' + esc(key) + '">' + html + html + '</div>';
+      strip.style.display = "";
+      fitTicker();
+    }
+
+    /* learning */
+    function loadLearning(){
+      return fetch("api.php?action=learning", {headers: {"Accept": "application/json"}}).then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function(j){
+        var changed = !S.learn || S.learn.champion !== j.champion || JSON.stringify(S.learn.weights) !== JSON.stringify(j.weights);
+        S.learn = j;
+        renderLearnScore();
+        if (changed && S.markets.length){
+          renderHome();
+          if (S.current) renderMarket();
+          if ($("view-watchlist").classList.contains("on")) renderWatchlist();
+        }
+      }).catch(function(){
+      });
+    }
+    /* scored samples only; until then it says the first samples are still being collected. */
+    function renderLearnScore(){
+      var el = $("learnScore");
+      if (!el) return;
+      var L = S.learn;
+      if (!L || !L.scored){
+        el.textContent = "Scored 0 forecasts so far. Still collecting the first samples.";
+        return;
+      }
+      var pct = Math.round(L.correct / L.scored * 100);
+      el.textContent = "Scored " + L.scored + " forecasts so far, " + pct + "% right" +
+        (L.champion === "learned" ? ". The forecast now uses what past results taught it." : ". The forecast still uses its starting formula, and it will switch only when past results show a better way.");
+    }
+    /* record what the page showed, so it can be scored when the market ends. fire and forget. */
+    function recordForecasts(){
+      var list = visibleMarkets();
+      var items = [];
+      var now = Math.floor(Date.now() / 1000);
+      list.forEach(function(m){
+        var fc = forecastFor(m);
+        if (!fc || m.p0 === null) return;
+        items.push({
+          id: m.id, asset: assetOf(m) || "", label0: m.outcomes[0].label,
+          p: fc.p, price: m.p0,
+          spread: (m.bid !== null && m.ask !== null) ? m.ask - m.bid : null,
+          mins: m.end ? Math.max(0, Math.round((m.end - now) / 60)) : 0,
+          vol: num(m.vol24) || 0, end: m.end, win: windowSecs(m)
+        });
+      });
+      if (!items.length) return;
+      fetch("api.php?action=record_forecasts", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Accept": "application/json"},
+        body: JSON.stringify({items: items})
+      }).catch(function(){});
+    }
+
+    /* watchlist */
+    var WATCH_KEY = "prognosis-watchlist-v1";
+    function loadWatch(){
+      try {
+        var raw = localStorage.getItem(WATCH_KEY);
+        var arr = raw ? JSON.parse(raw) : [];
+        S.watch = Array.isArray(arr) ? arr.filter(function(w){ return w && w.id; }) : [];
+      } catch (e) { S.watch = []; }
+    }
+    function saveWatch(){
+      try { localStorage.setItem(WATCH_KEY, JSON.stringify(S.watch)); } catch (e) {}
+    }
+    function isWatched(id){
+      return S.watch.some(function(w){ return w.id === id; });
+    }
+    function toggleWatch(id){
+      var i = S.watch.findIndex(function(w){ return w.id === id; });
+      if (i >= 0){
+        S.watch.splice(i, 1);
+        toast("Removed from your watchlist.");
+      } else {
+        var m = S.markets.find(function(x){ return x.id === id; }) || (S.detail && S.detail.id === id ? S.detail : null);
+        S.watch.push({id: id, q: m ? m.question : "", addedAt: Date.now(), p: m ? m.p0 : null});
+        toast("<b>Added to your watchlist.</b>");
+      }
+      saveWatch();
+      syncStars();
+      if ($("view-watchlist").classList.contains("on")) renderWatchlist();
+    }
+    function syncStars(){
+      document.querySelectorAll("[data-star]").forEach(function(el){
+        var on = isWatched(el.getAttribute("data-star"));
+        el.textContent = on ? "★" : "☆";
+        el.classList.toggle("on", on);
+      });
+      var ms = $("mStar");
+      if (ms && S.current){
+        var on = isWatched(S.current);
+        ms.textContent = on ? "★" : "☆";
+        ms.classList.toggle("on", on);
+      }
+    }
+    function watchAlertsFor(m, w){
+      var alerts = [];
+      var now = Math.floor(Date.now() / 1000);
+      if (m.p0 !== null && w.p !== null && w.p !== undefined){
+        var dp = m.p0 - w.p;
+        if (Math.abs(dp) >= 0.05){
+          alerts.push("the price moved " + (Math.abs(dp) * 100).toFixed(1) + " points since you added it, from " + fmtPct(w.p) + " to " + fmtPct(m.p0) + " for " + m.outcomes[0].label);
+        }
+      }
+      if (m.end && (m.end - now) > 0 && (m.end - now) < 300){
+        alerts.push("less than 5 minutes left");
+      }
+      if (S.flags && S.flags[m.id]){
+        alerts.push("flagged by price alerts: " + String(S.flags[m.id].text).replace(/\.$/, ""));
+      }
+      return alerts;
+    }
+    function renderWatchlist(){
+      var list = $("watchList"), alertsBox = $("watchAlerts");
+      $("watchCount").textContent = S.watch.length + (S.watch.length === 1 ? " MARKET" : " MARKETS");
+      if (!S.watch.length){
+        list.innerHTML = '<div class="quiet">Your watchlist is empty. Star a market to keep it here.</div>';
+        alertsBox.innerHTML = '<div class="quiet">No alerts right now.</div>';
+        return;
+      }
+      var allAlerts = [];
+      var html = "";
+      S.watch.forEach(function(w){
+        var m = S.markets.find(function(x){ return x.id === w.id; });
+        if (!m){
+          html += '<div class="watch-item"><p class="wq">' + esc(w.q || "Market") + '</p>' +
+            '<p class="watch-alert">This market is no longer listed.</p>' +
+            '<div class="watch-kv"><button type="button" class="back-btn" data-unwatch="' + esc(w.id) + '">Remove</button></div></div>';
+          return;
+        }
+        var fc = forecastFor(m);
+        var alerts = watchAlertsFor(m, w);
+        alerts.forEach(function(a){ allAlerts.push({q: m.question, a: a}); });
+        var now = Math.floor(Date.now() / 1000);
+        var left = m.end ? (m.end - now > 0 ? timeLeft(m.end - now) : "closed") : "-";
+        html += '<div class="watch-item"><p class="wq"><button type="button" data-open="' + esc(m.id) + '">' + esc(m.question) + '</button></p>' +
+          (fc ? '<p class="fc" style="padding-top:0"><b>' + esc(fc.verdict) + '.</b> ' + esc(fc.reason) + '</p>' : '') +
+          '<div class="watch-kv"><span>PRICE <b>' + fmtPct(m.p0) + '</b></span><span>TIME LEFT <b>' + esc(left) + '</b></span><span>VOLUME <b>' + fmtVol(m.volume) + '</b></span></div>' +
+          (alerts.length ? '<p class="watch-alert"><b>Alert:</b> ' + esc(alerts.join("; ")) + '.</p>' : '') +
+          '<div class="watch-kv"><button type="button" class="back-btn" data-unwatch="' + esc(m.id) + '">Remove</button></div></div>';
+      });
+      list.innerHTML = html;
+      if (!allAlerts.length){
+        alertsBox.innerHTML = '<div class="quiet">No alerts right now.</div>';
+      } else {
+        var ah = '<div class="alert-list">';
+        allAlerts.forEach(function(x){
+          ah += '<div class="alert-item"><p class="aq">' + esc(x.q) + '</p><p class="ar">' + esc(x.a) + '.</p></div>';
+        });
+        alertsBox.innerHTML = ah + '</div>';
+      }
+      list.querySelectorAll("[data-open]").forEach(function(b){
+        b.addEventListener("click", function(){ openMarket(b.getAttribute("data-open")); });
+      });
+      list.querySelectorAll("[data-unwatch]").forEach(function(b){
+        b.addEventListener("click", function(){ toggleWatch(b.getAttribute("data-unwatch")); });
+      });
+    }
+
+    /* home */
+    function splitHTML(){
+      return '<div class="card-split"><div class="y" style="width:50%"></div><div class="n"></div></div>';
+    }
+    /* "All" plus one tab per sector, with counts. default is the biggest sector. */
+    function renderSectors(){
+      var tabs = $("sectorTabs");
+      if (!tabs) return;
+      var counts = sectorCounts();
+      if (S.sector === null && counts.length){
+        S.sector = counts[0].key;
+      }
+      var total = S.markets.length;
+      var title = $("gridTitle");
+      if (title){
+        if (S.query) title.textContent = "Search results";
+        else if (S.sector === "all") title.textContent = "All markets";
+        else {
+          var cur = counts.filter(function(c){ return c.key === S.sector; })[0];
+          title.textContent = cur ? cur.label + " markets" : "All markets";
+        }
+      }
+      var html = '<button type="button" role="tab" class="sector-tab' + (S.sector === "all" ? " on" : "") + '" data-sector="all">All <span class="n">(' + total + ')</span></button>';
+      counts.forEach(function(c){
+        var col = sectorColor(c.key);
+        var on = S.sector === c.key;
+        var style = on ? ' style="background:' + col + '26;border-color:' + col + ';color:#111111"' : '';
+        html += '<button type="button" role="tab" class="sector-tab' + (on ? " on" : "") + '"' + style + ' data-sector="' + esc(c.key) + '"><span class="sector-dot" style="background:' + col + '"></span>' + esc(c.label) + ' <span class="n">(' + c.n + ')</span></button>';
+      });
+      tabs.innerHTML = html;
+      tabs.querySelectorAll("[data-sector]").forEach(function(b){
+        b.addEventListener("click", function(){
+          S.sector = b.getAttribute("data-sector");
+          S.shown = pageSize();
+          S.homeAnimate = true;
+          renderHome();
+        });
+      });
+    }
+
+    /* 6 cards on desktop, 3 on a phone, then Show more. */
+    function pageSize(){ return window.innerWidth <= 680 ? 3 : 6; }
+    function renderHome(){
+      var grid = $("marketGrid");
+      /* first paint and visitor-driven renders only, or the grid would fade in again every 30s. */
+      var animateHome = !S.gridPainted || !!S.homeAnimate;
+      S.homeAnimate = false;
+      if (!S.markets.length){
+        grid.innerHTML = '<div class="empty"><b>No markets right now.</b><br/>No market is listed at the moment. When one is listed it will appear here on its own.</div>';
+        renderSectors();
+        return;
+      }
+      renderSectors();
+      var m = featuredMarket();
+      S.featId = m ? m.id : null;
+      if (m){
+        var st = statusOf(m);
+        $("featQ").textContent = m.question;
+        var pill = $("featStatus");
+        pill.textContent = st.label;
+        pill.className = "pill" + (st.key === "closed" ? " closed" : st.key === "resolved" ? " resolved" : "");
+        $("featP0").textContent = fmtPct1(m.p0);
+        $("featP1").textContent = fmtPct1(m.p1);
+        var fprev = S.prevPrices ? S.prevPrices[m.id] : null;
+        flashPrice($("featP0"), fprev ? fprev.p0 : null, m.p0, m.id + ":0");
+        flashPrice($("featP1"), fprev ? fprev.p1 : null, m.p1, m.id + ":1");
+        $("featL0").textContent = m.outcomes[0].label.toUpperCase();
+        $("featL1").textContent = m.outcomes[1].label.toUpperCase();
+        $("featBid0").textContent = "BEST BID " + fmtPrice(m.bid) + " · BEST ASK " + fmtPrice(m.ask);
+        $("featBid1").textContent = "BEST BID " + fmtPrice(m.ask === null ? null : 1 - m.ask) + " · BEST ASK " + fmtPrice(m.bid === null ? null : 1 - m.bid);
+        $("featBlock0").classList.toggle("lead", m.p0 !== null && m.p1 !== null && m.p0 >= m.p1);
+        $("featBlock1").classList.toggle("lead", m.p0 !== null && m.p1 !== null && m.p1 > m.p0);
+        $("featBarY").style.width = (m.p0 === null ? 50 : m.p0 * 100).toFixed(1) + "%";
+        $("featBarLabL").textContent = m.outcomes[0].label.toUpperCase() + " SHARE OF PRICE";
+        $("featBarLab").textContent = m.outcomes[0].label.toUpperCase() + " " + fmtPct(m.p0) + " · " + m.outcomes[1].label.toUpperCase() + " " + fmtPct(m.p1);
+        $("featVolume").textContent = fmtVol(m.volume);
+        var spr = (m.bid !== null && m.ask !== null) ? Math.round((m.ask - m.bid) * 100) + "c" : "-";
+        $("featSpread").textContent = spr;
+        $("featLast").textContent = fmtLast(m.last);
+        var wl = (S.featChart && S.featChart.line !== null && S.featChart.line !== undefined) ? fmtUsd(S.featChart.line) : "NOT SET YET";
+        $("featWinLine").textContent = wl;
+        $("featBuyUp").textContent = fmtPrice(m.ask);
+        $("featBuyDown").textContent = fmtPrice(m.bid === null ? null : 1 - m.bid);
+        var ffc = forecastFor(m);
+        var fcCard = $("featFc");
+        if (ffc){
+          $("featFcVerdict").textContent = ffc.lean ? ffc.lean + ", " + fmtPct(ffc.p) : "About even";
+          $("featFcReason").textContent = ffc.reason;
+          fcCard.style.display = "";
+        } else {
+          $("featFcVerdict").textContent = "…";
+          $("featFcReason").textContent = "";
+          fcCard.style.display = "none";
+        }
+        $("featBox").style.cursor = "pointer";
+        /* The click handler lives at boot (one listener only):
+           a second handler here would load the market twice. */
+        if (S.featChartFor !== m.id){
+          S.featChartFor = m.id;
+          S.featChart = null;
+          S.featChartAnimate = true;
+          S.featChartAt = 0;
+        }
+        if (!S.featChartAt || Date.now() - S.featChartAt > 45000) loadFeatChart(m.id);
+        else renderFeatChart();
+      }
+      grid.innerHTML = "";
+      var list = visibleMarkets();
+      var moreBox = $("showMoreBox");
+      if (!list.length){
+        grid.innerHTML = '<div class="empty"><b>No markets match.</b><br/>' + (S.query ? 'Nothing matches your search. Try a different word, or clear it.' : 'No markets in this sector right now.') + '</div>';
+        if (moreBox) moreBox.style.display = "none";
+        return;
+      }
+      list = list.slice().sort(function(a, b){ return (a.end || 0) - (b.end || 0); });
+      if (S.shown > list.length) S.shown = list.length;
+      var shown = list.slice(0, S.shown);
+      var gr = document.createElement("div"); gr.className = "grid" + (animateHome ? "" : " painted");
+      shown.forEach(function(mk){ gr.appendChild(marketCard(mk)); });
+      grid.appendChild(gr);
+      if (moreBox){
+        if (list.length > S.shown){
+          moreBox.style.display = "";
+          var smb = $("showMoreBtn");
+          if (smb) smb.textContent = "Show more markets (" + (list.length - S.shown) + " more)";
+        } else {
+          moreBox.style.display = "none";
+        }
+      }
+      S.gridPainted = true;
+    }
+    function marketCard(mk){
+      var stk = statusOf(mk);
+      var fc = forecastFor(mk);
+      var fl = S.flags && S.flags[mk.id];
+      var flagLab = fl ? (fl.kind === "move" ? "PRICE MOVED" : fl.kind === "spread" ? "SPREAD WIDENED" : "NO QUOTE") : "";
+      var prev = S.prevPrices ? S.prevPrices[mk.id] : null;
+      var card = document.createElement("button");
+      card.type = "button"; card.className = "card";
+      card.innerHTML =
+        '<span class="card-top"><span style="display:inline-flex;align-items:center;gap:10px"><span class="sector-dot" style="background:' + sectorColor(sectorOf(mk).key) + '"></span><span class="sec-note">' + esc(groupOf(mk).toUpperCase()) + '</span></span><span style="display:flex;align-items:center;gap:4px"><span class="pill pill--sm">' + esc(stk.label) + '</span>' + (fl ? '<span class="flag-chip">! ' + esc(flagLab) + '</span>' : '') + '<span class="star' + (isWatched(mk.id) ? " on" : "") + '" role="button" tabindex="0" aria-label="Keep this market on your watchlist" data-star="' + esc(mk.id) + '">' + (isWatched(mk.id) ? "★" : "☆") + '</span></span></span>' +
+        '<span class="card-q">' + esc(mk.question) + '</span>' +
+        splitHTML() +
+        '<span class="card-outcomes"><span class="oc first"><span class="s">' + esc(mk.outcomes[0].label) + '</span><span class="p' + flashClass(prev ? prev.p0 : null, mk.p0, mk.id + ":0") + '">' + fmtPct(mk.p0) + '</span></span>' +
+        '<span class="oc"><span class="s">' + esc(mk.outcomes[1].label) + '</span><span class="p' + flashClass(prev ? prev.p1 : null, mk.p1, mk.id + ":1") + '">' + fmtPct(mk.p1) + '</span></span></span>' +
+        (fc ? '<span class="fc"><b>' + esc(fc.verdict) + '.</b> ' + esc(fc.reason) + '</span>' : '') +
+        '<span class="card-meta"><span>VOLUME ' + fmtVol(mk.volume) + '</span><span>ENDS ' + fmtDate(mk.end) + '</span></span>';
+      var bar = card.querySelector(".card-split .y");
+      if (bar) bar.style.width = (mk.p0 === null ? 50 : mk.p0 * 100).toFixed(1) + "%";
+      var star = card.querySelector("[data-star]");
+      if (star){
+        star.addEventListener("click", function(e){ e.stopPropagation(); toggleWatch(mk.id); });
+        star.addEventListener("keydown", function(e){
+          if (e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); toggleWatch(mk.id); }
+        });
+      }
+      card.addEventListener("click", function(e){
+        if (e.target && e.target.closest && e.target.closest("[data-star]")) return;
+        openMarket(mk.id);
+      });
+      return card;
+    }
+
+    /* market page */
+    function cur(){
+      /* detail has the description and the resolution source; the list copy does not. */
+      if (S.detail && S.detail.id === S.current) return S.detail;
+      return S.markets.find(function(m){ return m.id === S.current; });
+    }
+    function openMarket(id){
+      S.current = id; S.detail = null; S.books = {};
+      S.chart = null; S.chartFor = null; S.chartAnimate = true;
+      showView("market");
+      $("mQ").textContent = "Loading…";
+      $("mStatus").textContent = "LOADING";
+      $("mCountdown").textContent = "";
+      renderChart();
+      $("book0").querySelector(".book-empty, table") && renderBookEmpty(0);
+      $("book1").querySelector(".book-empty, table") && renderBookEmpty(1);
+      window.scrollTo(0, 0);
+      loadDetail(id);
+    }
+    function renderBookEmpty(i){
+      var box = $("book" + i);
+      var head = box.querySelector(".book-head");
+      box.innerHTML = "";
+      box.appendChild(head);
+      var d = document.createElement("div"); d.className = "book-empty"; d.textContent = "Loading the order book…";
+      box.appendChild(d);
+    }
+    function renderBook(i, book, label){
+      var box = $("book" + i);
+      var head = box.querySelector(".book-head");
+      var title = $("book" + i + "Title"), best = $("book" + i + "Best");
+      title.textContent = label;
+      box.innerHTML = "";
+      box.appendChild(head);
+      if (!book || (!book.bids && !book.asks)){
+        var d = document.createElement("div"); d.className = "book-empty"; d.textContent = "No orders in the book right now.";
+        box.appendChild(d);
+        best.textContent = "-";
+        return;
+      }
+      var bids = (book.bids || []).slice(0, 10);
+      var asks = (book.asks || []).slice(0, 10);
+      var topBid = bids.length ? num(bids[0].price) : null;
+      var topAsk = asks.length ? num(asks[0].price) : null;
+      best.innerHTML = '<span class="bp-bid">BID ' + fmtPrice(topBid) + '</span> · <span class="bp-ask">ASK ' + fmtPrice(topAsk) + '</span>';
+      var html = '<table><tr><th>PRICE</th><th>SIZE</th></tr>';
+      if (asks.length){
+        html += '<tr><td colspan="2" class="asks-lab">ASKS · SELLING AT</td></tr>';
+        asks.slice().reverse().forEach(function(a, idx){
+          var p = num(a.price);
+          html += '<tr><td class="ask' + (idx === asks.length - 1 ? " best" : "") + '">' + fmtPrice(p) + '</td><td class="ask">' + esc(a.size || "-") + '</td></tr>';
+        });
+      }
+      if (bids.length){
+        html += '<tr><td colspan="2" class="bids-lab">BIDS · BUYING AT</td></tr>';
+        bids.forEach(function(b, idx){
+          var p = num(b.price);
+          html += '<tr><td class="bid' + (idx === 0 ? " best" : "") + '">' + fmtPrice(p) + '</td><td class="bid">' + esc(b.size || "-") + '</td></tr>';
+        });
+      }
+      html += '</table>';
+      if (!asks.length && !bids.length) html = '<div class="book-empty">No orders in the book right now.</div>';
+      var wrap = document.createElement("div");
+      wrap.innerHTML = html;
+      while (wrap.firstChild) box.appendChild(wrap.firstChild);
+    }
+    function renderMarket(){
+      var m = cur(); if (!m) return;
+      var st = statusOf(m);
+      $("mQ").textContent = m.question;
+      var pill = $("mStatus");
+      pill.textContent = st.label;
+      pill.className = "pill" + (st.key === "closed" ? " closed" : st.key === "resolved" ? " resolved" : "");
+      $("mP0").textContent = fmtPct1(m.p0);
+      $("mP1").textContent = fmtPct1(m.p1);
+      var mprev = S.prevPrices ? S.prevPrices[m.id] : null;
+      flashPrice($("mP0"), mprev ? mprev.p0 : null, m.p0, m.id + ":0");
+      flashPrice($("mP1"), mprev ? mprev.p1 : null, m.p1, m.id + ":1");
+      $("mL0").textContent = m.outcomes[0].label.toUpperCase();
+      $("mL1").textContent = m.outcomes[1].label.toUpperCase();
+      $("mBid0").textContent = "BEST BID " + fmtPrice(m.bid) + " · BEST ASK " + fmtPrice(m.ask);
+      $("mBid1").textContent = "BEST BID " + fmtPrice(m.ask === null ? null : 1 - m.ask) + " · BEST ASK " + fmtPrice(m.bid === null ? null : 1 - m.bid);
+      $("mBarY").style.width = (m.p0 === null ? 50 : m.p0 * 100).toFixed(1) + "%";
+      $("mBarLabL").textContent = m.outcomes[0].label.toUpperCase() + " SHARE OF PRICE";
+      $("mBarLab").textContent = m.outcomes[0].label.toUpperCase() + " " + fmtPct(m.p0) + " · " + m.outcomes[1].label.toUpperCase() + " " + fmtPct(m.p1);
+      $("mExpiry").textContent = fmtDate(m.end);
+      $("mVolume").textContent = fmtVol(m.volume);
+      $("mLast").textContent = fmtLast(m.last);
+      $("mWindow").textContent = windowOf(m);
+      $("tradeL0").textContent = m.outcomes[0].label.toUpperCase();
+      $("tradeL1").textContent = m.outcomes[1].label.toUpperCase();
+      $("tradeP0").textContent = fmtPrice(m.ask);
+      $("tradeP1").textContent = fmtPrice(m.bid === null ? null : 1 - m.bid);
+      var dfc = forecastFor(m);
+      var ftext = dfc ? dfc.verdict + ". " + dfc.reason : "No forecast for this market yet. There is no live price to work from.";
+      var cb = chartForecastBits(m);
+      if (dfc && cb) ftext += " " + cb;
+      $("mForecastText").textContent = ftext;
+      $("mForecastBasis").textContent = dfc ? dfc.basis : "-";
+      var lineRow = $("mForecastLineRow");
+      if (S.chart && S.chart.available && S.chart.market_id === m.id && S.chart.line !== null && S.chart.line !== undefined && S.chart.line > 0){
+        var dd = (S.chart.current - S.chart.line) / S.chart.line * 100;
+        var ah = S.chart.average >= S.chart.line ? m.outcomes[0].label : m.outcomes[1].label;
+        $("mForecastLine").textContent = Math.abs(dd).toFixed(1) + "% " + (dd >= 0 ? "above" : "below") + " the line · " + ah + " ahead";
+        lineRow.style.display = "";
+      } else {
+        lineRow.style.display = "none";
+      }
+      syncStars();
+      $("mDesc").textContent = m.desc || "This market settles on the outcome stated in its question, from the source shown below.";
+      var src = $("mSource");
+      if (m.source && /^https?:\/\//.test(m.source)){
+        src.innerHTML = '<a href="' + esc(m.source) + '" target="_blank" rel="noopener noreferrer">' + esc(m.source) + ' ↗</a>';
+      } else {
+        src.textContent = m.source || "-";
+      }
+      $("mResStatus").textContent = st.label;
+      var t0 = m.outcomes[0] && m.outcomes[0].tokenId;
+      var t1 = m.outcomes[1] && m.outcomes[1].tokenId;
+      renderBook(0, t0 ? S.books[t0] : null, m.outcomes[0].label);
+      renderBook(1, t1 ? S.books[t1] : null, m.outcomes[1].label);
+      renderChart();
+    }
+
+    /* nav */
+    function showView(name){
+      ["home", "market", "docs", "watchlist", "news"].forEach(function(v){
+        $("view-" + v).classList.toggle("on", v === name);
+      });
+      document.querySelectorAll("[data-nav]").forEach(function(b){
+        b.classList.toggle("on", b.getAttribute("data-nav") === name);
+      });
+      if (name === "watchlist") renderWatchlist();
+    }
+    document.querySelectorAll("[data-nav]").forEach(function(b){
+      b.addEventListener("click", function(e){
+        e.preventDefault();
+        var v = b.getAttribute("data-nav");
+        if (v === "market") v = "home";
+        showView(v);
+        window.scrollTo(0, 0);
+      });
+    });
+
+    /* events */
+    $("refreshBtn").addEventListener("click", function(){
+      loadMarkets().then(function(){ if (S.markets.length) toast("<b>Prices refreshed.</b>"); });
+    });
+    $("retryBtn").addEventListener("click", function(){ loadMarkets(); });
+    /* nav: bell, menu, and accounts (accounts open with trading). */
+    function authSoon(){ toast("Accounts open when trading opens. Watching and forecasts are live now."); }
+    ["signInBtn", "createBtn", "mSignInBtn", "mCreateBtn"].forEach(function(id){
+      var b = $(id); if (b) b.addEventListener("click", function(){ var mm = $("mobileMenu"); if (mm) mm.classList.remove("open"); authSoon(); });
+    });
+    $("menuBtn").addEventListener("click", function(){ $("mobileMenu").classList.toggle("open"); });
+    document.querySelectorAll("#mobileMenu [data-nav]").forEach(function(b){ b.addEventListener("click", function(){ $("mobileMenu").classList.remove("open"); }); });
+    $("bellBtn").addEventListener("click", function(){
+      var n = Object.keys(S.flags || {}).length;
+      if (n){ showView("home"); var sec = $("watchdogSection"); if (sec) sec.scrollIntoView({block: "start"}); }
+      else { toast("No price alerts right now."); }
+    });
+    $("showMoreBtn").addEventListener("click", function(){
+      S.shown += pageSize();
+      S.homeAnimate = false;
+      renderHome();
+    });
+    document.querySelectorAll("[data-doc]").forEach(function(a){
+      a.addEventListener("click", function(e){
+        e.preventDefault();
+        document.querySelectorAll("[data-doc]").forEach(function(x){ x.classList.remove("on"); });
+        a.classList.add("on");
+        var t = document.getElementById(a.getAttribute("data-doc"));
+        if (t) t.scrollIntoView({block: "start"});
+      });
+    });
+    $("mStar").addEventListener("click", function(){ if (S.current) toggleWatch(S.current); });
+    var searchTimer = null;
+    $("searchInput").addEventListener("input", function(){
+      clearTimeout(searchTimer);
+      var v = $("searchInput").value;
+      searchTimer = setTimeout(function(){
+        S.query = v.trim().toLowerCase();
+        S.shown = pageSize();
+        S.homeAnimate = true;
+        renderHome();
+      }, 150);
+    });
+    $("featBox").addEventListener("click", function(){
+      var m = featuredMarket();
+      if (m) openMarket(m.id);
+    });
+
+    /* countdowns tick every second off the end time, between 30s fetches. */
+    setInterval(function(){
+      var now = Math.floor(Date.now() / 1000);
+      if ($("view-market").classList.contains("on")){
+        var m = cur();
+        if (m){
+          $("mCountdown").textContent = m.winOutcome ? "" : countdownText((m.end || 0) - now);
+        }
+      }
+      if ($("view-home").classList.contains("on")){
+        var fc = $("featCountdown");
+        if (fc){
+          if (!S.featId){
+            fc.textContent = "";
+          } else {
+            var fm = S.markets.find(function(x){ return x.id === S.featId; });
+            fc.textContent = fm ? (fm.winOutcome ? "RESOLVED" : countdownText((fm.end || 0) - now)) : "";
+          }
+        }
+      }
+    }, 1000);
+
+    /* redraw charts on resize, e.g. rotating a phone. the svg keys are cleared so it actually redraws. */
+    var resizeTimer = null;
+    window.addEventListener("resize", function(){
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function(){
+        S.chartSvgKey = null; S.featChartSvgKey = null;
+        if (S.current && $("view-market").classList.contains("on")) renderChart();
+        if ($("view-home").classList.contains("on")) renderFeatChart();
+        fitTicker();
+      }, 200);
+    });
+
+    /* boot */
+    /* background refresh every 30s; the page itself never reloads. */
+    loadWatch();
+    loadMarkets();
+    loadNews();
+    loadTicker();
+    loadLearning();
+    renderLearnScore();
+    setInterval(function(){ if (!document.hidden) loadMarkets(); }, 30000);
+    setInterval(function(){ if (!document.hidden) loadNews(); }, 300000);
+    setInterval(function(){ if (!document.hidden) loadLearning(); }, 300000);
+    </script>
+  </body>
+</html>
